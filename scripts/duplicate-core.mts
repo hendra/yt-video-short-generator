@@ -26,8 +26,8 @@ const STOP = new Set([
   "yang","dan","dari","untuk","dengan","itu","ini","di","ke","nya","ada","akan","jadi","atau","pada","dalam","karena","seperti","serta","saat","anda","kita","kami","kamu","dia","mereka","harus","bisa","lebih","adalah","kok","kenapa","mengapa","cara","apa","agar","juga",
   "the","and","with","for","from","this","that","into","your","you","are","was","were","has","have","how","why","what",
   "shorts","youtube","tiktok","komentar","tulis","tanya","mau","bongkar","lagi","sumber","animasi","ilustrasi","suara","google","ai","studio","kali","aja","tau","labs",
-  // Cerpenek boilerplate: genre words that every story title or description carries.
-  "cerpenek","nenek","sastra","mesin","cucuku","legenda","cerita","rakyat","kisah","dongeng","sejarah","asal","usul",
+  // Cerpenek & Mandor Bangunan boilerplate: channel/genre words shared across titles or descriptions.
+  "cerpenek","nenek","sastra","mesin","mandor","cucuku","legenda","cerita","rakyat","kisah","dongeng","sejarah","asal","usul",
 ]);
 
 export const significantTokens = (input: string): Set<string> => {

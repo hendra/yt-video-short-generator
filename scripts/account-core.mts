@@ -162,6 +162,20 @@ export const sastraMesinVideoProblems = (opts: { indexSource: string; hasWorldFi
   return problems;
 };
 
+/** Rules specific to mandor-bangunan videos: 3D diorama (world.ts, not motion/footage) with default "cream" overlay theme. */
+export const mandorBangunanVideoProblems = (opts: { indexSource: string; hasWorldFile: boolean }): string[] => {
+  const problems: string[] = [];
+  const indexCode = opts.indexSource.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  if (/mode\s*:\s*["'](?:motion|footage)["']/.test(indexCode) || !opts.hasWorldFile) {
+    problems.push('mandor-bangunan wajib 3D (world.ts), bukan mode: "motion" atau "footage"');
+  }
+  const themeMatch = indexCode.match(/(?:^|[{,\n])\s*theme\s*:\s*["']([^"']+)["']/);
+  if (themeMatch && themeMatch[1] !== "cream") {
+    problems.push(`mandor-bangunan wajib pakai theme default "cream" (bukan "${themeMatch[1]}") di index.ts`);
+  }
+  return problems;
+};
+
 /** Rules specific to upwayyy videos: Steam trailer footage only — footage mode, no world.ts, every shot's clip exists and is used once, credit line in the description. */
 export const upwayyyVideoProblems = (opts: {
   indexSource: string;
