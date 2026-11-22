@@ -30,6 +30,11 @@ export const buildReportText = (opts: ReportOptions): string => {
     return `:calendar: *[${label}] Video dijadwalkan*\n${lines.join("\n")}\nProject: \`${slug}\` — diproduksi oleh pipeline video-short (GitHub-hosted).`;
   }
   if (links) {
+    const mappedLines = PLATFORM_LINES.filter(([p]) => Boolean(linkMap[p])).map(([p, icon]) => `${icon} ${linkMap[p]}`);
+    if (mappedLines.length > 0) {
+      const first = linkMap.youtube ?? linkMap.tiktok ?? linkMap.instagram ?? "";
+      return `:rocket: *[${label}] Video baru live*\n*Judul:* lihat di ${first}\n${mappedLines.join("\n")}\nProject: \`${slug}\` — diproduksi oleh pipeline video-short (GitHub-hosted).`;
+    }
     const [yt, tt, ig] = links.split(",");
     const igLine = ig ? `\n📸 ${ig}` : "";
     return `:rocket: *[${label}] Video baru live*\n*Judul:* lihat di ${yt ?? ""}\n▶️ ${yt ?? "?"}\n🎵 ${tt ?? "?"}${igLine}\nProject: \`${slug}\` — diproduksi oleh pipeline video-short (GitHub-hosted).`;

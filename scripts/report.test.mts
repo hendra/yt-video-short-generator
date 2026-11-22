@@ -53,6 +53,17 @@ describe("buildReportText (Slack payload, shipped helper)", () => {
     const three = buildReportText({ slug: "video-id", links: "https://yt/1,https://tt/2,https://ig/3", account: "sastra-mesin" });
     assert.match(three, /📸 https:\/\/ig\/3/);
   });
+  test("live report with TikTok-only linkMap omits YouTube and renders the TikTok link", () => {
+    const t = buildReportText({
+      slug: "video-id",
+      links: "https://tt/2",
+      linkMap: { tiktok: "https://tt/2" },
+      account: "mandor-bangunan",
+    });
+    assert.match(t, /\*\[Mandor Bangunan\] Video baru live\*/);
+    assert.match(t, /🎵 https:\/\/tt\/2/);
+    assert.equal(t.includes("▶️"), false);
+  });
   test("formatLinksCsv omits null/missing links cleanly", () => {
     assert.equal(formatLinksCsv({ youtube: "https://yt/1", tiktok: "https://tt/2" }), "https://yt/1,https://tt/2");
     assert.equal(formatLinksCsv({ youtube: "https://yt/1", tiktok: "https://tt/2", instagram: "https://ig/3" }), "https://yt/1,https://tt/2,https://ig/3");
