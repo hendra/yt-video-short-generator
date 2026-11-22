@@ -182,7 +182,7 @@ describe("poseFigure keeps the built arm splay", () => {
   test("arms keep their outward z-splay in every mode that does not override it", () => {
     const kit = new Kit(new Group());
     const f = kit.figure(0, 0, 0);
-    // Kit.figure builds the arms with rotation.z = ±0.22; poseFigure must reset onto the same axis
+    // Kit.figure builds the arms with rotation.z = ±0.18; poseFigure must reset onto the same axis
     for (const mode of ["talk", "wave", "point", "sad"] as const) {
       poseFigure(f, 1, mode, 1);
       assert.ok(Math.abs(f.armL.rotation.y) < 1e-9, `${mode}: left arm yawed to ${f.armL.rotation.y}`);
@@ -191,5 +191,131 @@ describe("poseFigure keeps the built arm splay", () => {
     poseFigure(f, 1, "sad", 1);
     assert.ok(f.armL.rotation.z < 0, `sad: left arm lost its outward splay (z=${f.armL.rotation.z})`);
     assert.ok(f.armR.rotation.z > 0, `sad: right arm lost its outward splay (z=${f.armR.rotation.z})`);
+  });
+});
+
+describe("Opsi C figure polish", () => {
+  test("all age, headwear, and costume combinations build with finite transforms and waist torso pivot", () => {
+    const ages = ["anak", "dewasa", "lansia"] as const;
+    const headwears = ["none", "caping", "mahkota", "ikat", "kerudung"] as const;
+    const costumes = ["none", "selempang", "rompi"] as const;
+    for (const age of ages) {
+      for (const headwear of headwears) {
+        for (const costume of costumes) {
+          const root = new Group();
+          const kit = new Kit(root);
+          const f = kit.figure(0, 0, 0, { age, headwear, costume });
+          assert.ok(f.torso.position.y >= 0.3, `torso pivot too low (${f.torso.position.y}) for ${age}/${headwear}`);
+          assert.ok(f.blink.children.length >= 4, `missing blink eyes for ${age}/${headwear}`);
+          assert.ok(Math.abs(f.armL.rotation.z + 0.18) < 1e-6 && Math.abs(f.armR.rotation.z - 0.18) < 1e-6);
+          root.traverse((o) => {
+            assert.ok(Number.isFinite(o.position.x + o.position.y + o.position.z));
+            assert.ok(Number.isFinite(o.rotation.x + o.rotation.y + o.rotation.z));
+          });
+        }
+      }
+    }
+  });
+
+  test("kerudung skirt stays on root while torso tilts cleanly around waist", () => {
+    const kit = new Kit(new Group());
+    const f = kit.figure(0, 0, 0, { headwear: "kerudung", costume: "selempang" });
+    poseFigure(f, 1, "sad", 1);
+    assert.ok(f.torso.rotation.x > 0, "sad pose should tilt torso at waist");
+    assert.equal(f.root.rotation.x, 0, "root must stay upright when torso tilts");
+  });
+
+  test("poseFigure resets idle arms to ±0.18 splay", () => {
+    const kit = new Kit(new Group());
+    const f = kit.figure(0, 0, 0);
+    poseFigure(f, 0, "talk", 1);
+    poseFigure(f, 0, "idle", 1);
+    assert.ok(Math.abs(f.armL.rotation.z + 0.18) < 0.05);
+    assert.ok(Math.abs(f.armR.rotation.z - 0.18) < 0.05);
+  });
+});
+
+describe("Opsi C creatures (animal, bird, swimmer)", () => {
+  test("animal exposes head and tail pivots and builds all ear/horn/stripe/tail variants cleanly", () => {
+    const configs = [
+      { s: 1.8, color: "#5c5650", horns: true, tail: "panjang" as const },
+      { s: 1.4, color: "#e08a2e", tail: "panjang" as const, stripes: true },
+      { s: 0.9, color: "#b98a5a", ears: "runcing" as const },
+      { s: 1.0, color: "#e8dfd5", ears: "panjang" as const, tail: "pendek" as const },
+    ];
+    for (const o of configs) {
+      const root = new Group();
+      const kit = new Kit(root);
+      const a = kit.animal(0, 0, 0, o);
+      assert.ok(isGroup(a.root) && isGroup(a.head) && isGroup(a.tail));
+      assert.ok(a.tail.children.length >= 1, "animal tail pivot must hold tail geometry");
+      root.traverse((obj) => {
+        assert.ok(Number.isFinite(obj.position.x + obj.position.y + obj.position.z));
+        assert.ok(Number.isFinite(obj.rotation.x + obj.rotation.y + obj.rotation.z));
+      });
+    }
+  });
+
+  test("bird and swimmers (ikan, buaya) build multi-part geometry with finite transforms inside CPU triangle budget", () => {
+    const root = new Group();
+    const kit = new Kit(root);
+    const b = kit.bird(0, 1, 0, 0, { s: 1.2 });
+    const f = kit.swimmer(0, 0, 0, { kind: "ikan" });
+    const c = kit.swimmer(1, 0, 0, { kind: "buaya" });
+    kit.animal(-1, 0, 0, { horns: true, stripes: true, tail: "panjang" });
+    assert.ok(isGroup(b.wingL) && isGroup(b.wingR));
+    assert.ok(isGroup(f.tail) && isGroup(c.tail));
+    let tris = 0;
+    root.traverse((o) => {
+      assert.ok(Number.isFinite(o.position.x + o.position.y + o.position.z));
+      const g = (o as Mesh).geometry as { index?: { count: number } | null; attributes?: { position?: { count: number } } } | undefined;
+      if (!g?.attributes?.position) return;
+      tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+    });
+    assert.ok(tris < 25000, `creatures use ${tris} triangles, budget is 25000`);
+  });
+
+  test("animal smile tube sits flush on muzzle surface rather than buried inside", () => {
+    const kit = new Kit(new Group());
+    const a = kit.animal(0, 0, 0);
+    let smileMaxZ = -Infinity;
+    a.head.traverse((o) => {
+      const m = o as Mesh;
+      if (!isMesh(m)) return;
+      const g = m.geometry as { type?: string; attributes?: { position?: { count: number; getZ: (i: number) => number } } };
+      if (g?.type === "TubeGeometry" && g.attributes?.position) {
+        for (let i = 0; i < g.attributes.position.count; i++) {
+          smileMaxZ = Math.max(smileMaxZ, g.attributes.position.getZ(i));
+        }
+      }
+    });
+    // Muzzle center is z=0.13 with Z radius 0.0684 (front at z=0.1984); smile must sit near front surface (>= 0.194)
+    assert.ok(smileMaxZ >= 0.194, `animal smile max Z (${smileMaxZ.toFixed(4)}) is buried inside muzzle`);
+  });
+
+  test("ikan eyes sit outward along the fish cheek without clipping inside the body", () => {
+    const kit = new Kit(new Group());
+    const f = kit.swimmer(0, 0, 0, { kind: "ikan" });
+    const eyeWorldXs: number[] = [];
+    f.root.traverse((o) => {
+      const m = o as Mesh;
+      if (!isMesh(m)) return;
+      // Eye groups/meshes sit around y ~ 0.195; find pupil/dot front positions in root space
+      if (o.parent !== f.root && o.parent?.parent === f.root) {
+        const rx = o.parent.position.x + o.position.x;
+        eyeWorldXs.push(Math.abs(rx));
+      }
+    });
+    assert.ok(eyeWorldXs.some((x) => x >= 0.075), `ikan eyes sit too close to centerline (${eyeWorldXs.join(", ")})`);
+  });
+
+  test("poseFigure walk never swings arms inward past vertical into the torso", () => {
+    const kit = new Kit(new Group());
+    const f = kit.figure(0, 0, 0);
+    for (let i = 0; i < 40; i++) {
+      poseFigure(f, i * 0.05, "walk", 1);
+      assert.ok(f.armL.rotation.z < 0, `walk frame ${i}: armL crossed into torso (z=${f.armL.rotation.z})`);
+      assert.ok(f.armR.rotation.z > 0, `walk frame ${i}: armR crossed into torso (z=${f.armR.rotation.z})`);
+    }
   });
 });

@@ -15,6 +15,8 @@
  */
 
 const DEFAULT_ACCOUNTS = "kali-aja";
+// Accounts whose TikTok airs on YouTube's 2x/day schedule (no pagi 05:30 WIB run).
+const NO_MORNING_ACCOUNTS = new Set(["upwayyy"]);
 
 /** Dispatch one account; returns null on success, or a failure record. */
 async function dispatchOne(account, env) {
@@ -38,10 +40,11 @@ async function dispatchOne(account, env) {
 
 export default {
   async scheduled(event, env, ctx) {
+    const isMorningTick = new Date(event.scheduledTime || Date.now()).getUTCHours() === 22;
     const accounts = (env.ACCOUNTS || DEFAULT_ACCOUNTS)
       .split(",")
       .map((s) => s.trim())
-      .filter(Boolean);
+      .filter((a) => Boolean(a) && !(isMorningTick && NO_MORNING_ACCOUNTS.has(a)));
     const results = await Promise.allSettled(accounts.map((account) => dispatchOne(account, env)));
     const failures = [];
     for (const [i, result] of results.entries()) {

@@ -177,6 +177,15 @@ describe("slot scheduling", () => {
     assert.equal(dueAt("malam", "2026-11-21", "instagram"), "2026-11-21T13:00:00.000Z");
     assert.equal(dueAt("siang", "2026-11-21", "youtube"), "2026-11-21T05:00:00.000Z");
   });
+  test("upwayyy TikTok follows YouTube schedule (12:00 and 19:00 WIB only; no pagi)", () => {
+    assert.equal(dueAt("pagi", "2026-11-21", "tiktok", "upwayyy"), null);
+    assert.equal(dueAt("siang", "2026-11-21", "tiktok", "upwayyy"), "2026-11-21T05:00:00.000Z");
+    assert.equal(dueAt("malam", "2026-11-21", "tiktok", "upwayyy"), "2026-11-21T12:00:00.000Z");
+    assert.equal(dueAt("siang", "2026-11-21", "tiktok", "kali-aja"), "2026-11-21T06:00:00.000Z");
+    // 05:30 WIB and 19:30 WIB skip pagi and pick siang for upwayyy
+    assert.deepEqual(slotFor(new Date("2026-11-20T22:30:00Z"), "upwayyy"), { slot: "siang", date: "2026-11-21" });
+    assert.deepEqual(slotFor(new Date("2026-11-21T12:30:00Z"), "upwayyy"), { slot: "siang", date: "2026-11-22" });
+  });
   test("postTiming falls back to shareNow once the air time passed", () => {
     assert.deepEqual(postTiming("2026-11-21T00:00:00.000Z", new Date("2026-11-21T00:30:00Z")), { mode: "shareNow" });
     assert.deepEqual(postTiming("2026-11-21T01:00:00.000Z", new Date("2026-11-21T00:30:00Z")), { mode: "customScheduled", dueAt: "2026-11-21T01:00:00.000Z" });

@@ -1,15 +1,15 @@
-import { Audio } from "@remotion/media";
+import { Audio, Video } from "@remotion/media";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import React, { useLayoutEffect, useMemo } from "react";
-import { AbsoluteFill, getRemotionEnvironment, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Freeze, getRemotionEnvironment, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { NeutralToneMapping, PCFSoftShadowMap, PerspectiveCamera } from "three";
 import { loadFonts } from "./fonts";
-import { applyPose, blendPose, cutProgress, makeCtx, shotAt } from "./math";
+import { applyPose, blendPose, clamp, clipTimeAt, cutProgress, footageZoom, makeCtx, shotAt } from "./math";
 import { MotionStage } from "./motion/MotionStage";
 import { BLUEPRINT_BG, Overlays, themeOf } from "./overlays/Overlays";
 import { VIDEOS } from "../videos/registry";
-import type { CamPose, Ctx, ShotSpan, VideoDef, VideoDef3D, VideoDefMotion } from "./types";
+import type { CamPose, Ctx, ShotSpan, VideoDef, VideoDef3D, VideoDefFootage, VideoDefMotion } from "./types";
 
 loadFonts();
 
@@ -58,6 +58,42 @@ const MotionExplainer: React.FC<{
   return (
     <AbsoluteFill style={{ backgroundColor: "#0b0f17" }}>
       <MotionStage video={video} ctx={ctx} t={t} />
+      <Overlays video={video} shot={shot} shotStart={span.s} t={t} theme={themeOf(video)} />
+      {audio}
+    </AbsoluteFill>
+  );
+};
+
+const FootageExplainer: React.FC<{
+  video: VideoDefFootage;
+  ctx: Ctx;
+  span: ShotSpan;
+  t: number;
+  audio: React.ReactNode;
+}> = ({ video, ctx, span, t, audio }) => {
+  const fps = useVideoConfig().fps;
+  const shots = useMemo(() => video.shots(ctx), [video, ctx]);
+  const shot = shots[span.id];
+  if (!shot) throw new Error(`No FootageShotDef for shot "${span.id}"`);
+  return (
+    <AbsoluteFill style={{ backgroundColor: "#000" }}>
+      {video.timeline.shots.map((sp) => {
+        const sh = shots[sp.id];
+        if (!sh) return null;
+        const from = sh.from ?? 0;
+        // Local second at which playback must stop: the clip's last frame, or the shot's end if shorter.
+        const hold = Math.round((clipTimeAt(sp.e, sp.s, from, sh.clipDur) - from) * fps);
+        return (
+          <Sequence key={sp.id} from={Math.round(sp.s * fps)} durationInFrames={Math.max(1, Math.round((sp.e - sp.s) * fps) + 1)}>
+            <AbsoluteFill style={{ opacity: clamp((t - sp.s) / 0.15), transform: `scale(${footageZoom(t, sp)})` }}>
+              <Freeze frame={hold} active={t - sp.s > hold / fps}>
+                <Video src={staticFile(sh.clip)} muted objectFit="cover" trimBefore={Math.round(from * fps)} style={{ width: "100%", height: "100%" }} />
+              </Freeze>
+            </AbsoluteFill>
+          </Sequence>
+        );
+      })}
+      <AbsoluteFill style={{ background: "linear-gradient(rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%)" }} />
       <Overlays video={video} shot={shot} shotStart={span.s} t={t} theme={themeOf(video)} />
       {audio}
     </AbsoluteFill>
@@ -122,6 +158,9 @@ export const Explainer: React.FC<{ videoId: string; audioOnly?: boolean }> = ({ 
   const span = shotAt(video.timeline, t);
   if (video.mode === "motion") {
     return <MotionExplainer video={video} ctx={ctx} span={span} t={t} audio={audio} />;
+  }
+  if (video.mode === "footage") {
+    return <FootageExplainer video={video} ctx={ctx} span={span} t={t} audio={audio} />;
   }
   return <ThreeExplainer video={video} ctx={ctx} span={span} t={t} width={width} height={height} audio={audio} />;
 };

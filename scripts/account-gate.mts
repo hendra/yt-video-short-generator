@@ -7,8 +7,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ACCOUNTS, accountById, isAccountId } from "../src/accounts.ts";
-import { accountMusicProblems, accountProblems, aiLabsVideoProblems, brandProblems, instagramCaptionProblems, loopTailProblem, sastraMesinVideoProblems } from "./account-core.mts";
-import { videoDir } from "./lib.mts";
+import { accountMusicProblems, accountProblems, aiLabsVideoProblems, brandProblems, instagramCaptionProblems, loopTailProblem, sastraMesinVideoProblems, upwayyyVideoProblems } from "./account-core.mts";
+import { ROOT, videoDir } from "./lib.mts";
 
 const args = process.argv.slice(2);
 const arg = (name: string) => {
@@ -68,6 +68,30 @@ if (account.id === "ai-labs") {
       indexSource,
       shotsSource: shotsPath ? fs.readFileSync(shotsPath, "utf8") : null,
       hasWorldFile: fs.existsSync(path.join(dir, "world.ts")),
+      publishJson,
+    }),
+  );
+}
+
+if (account.id === "upwayyy") {
+  const { VIDEOS } = await import("../src/videos/registry.ts");
+  const video = VIDEOS[slug];
+  const clipPaths =
+    video?.mode === "footage"
+      ? Object.values(
+          video.shots({
+            tl: video.timeline,
+            L: (n) => video.timeline.lines[n - 1],
+            shot: (id) => video.timeline.shots.find((s) => s.id === id)!,
+          }),
+        ).map((s) => s.clip)
+      : [];
+  problems.push(
+    ...upwayyyVideoProblems({
+      indexSource,
+      hasWorldFile: fs.existsSync(path.join(dir, "world.ts")),
+      clipPaths,
+      clipExists: (clip) => fs.existsSync(path.join(ROOT, "public", clip)),
       publishJson,
     }),
   );

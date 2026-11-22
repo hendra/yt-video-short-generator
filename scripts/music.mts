@@ -20,6 +20,7 @@ export const MOODS_BY_ACCOUNT: Record<AccountId, readonly string[]> = {
   "ai-labs": ["build", "debug", "showcase"],
   "kali-aja": ["teknik", "misteri", "fenomena"],
   "sastra-mesin": ["rakit", "aliran", "rahasia"],
+  upwayyy: ["mencekam", "misteri", "klimaks"],
 };
 export const CERPENEK_MOODS = MOODS_BY_ACCOUNT.cerpenek;
 export const musicDirFor = (accountId: AccountId): string => path.join(ROOT, "public", accountId, "music");

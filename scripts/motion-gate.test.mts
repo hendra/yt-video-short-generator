@@ -80,6 +80,17 @@ describe("motionProblems", () => {
     assert.ok(problems.some((p) => p.includes("cakupan baris")), problems.join("; "));
   });
 
+  test("footage shots bring their own motion: no world/motion samples needed", () => {
+    assert.deepEqual(motionProblems({ account: "footage", source: "L(1) L(2)", lineCount: 2, world: [], motion: [] }), []);
+  });
+
+  test("footage is still held to line coverage and determinism", () => {
+    const coverage = motionProblems({ account: "footage", source: "L(1)", lineCount: 10, world: [], motion: [] });
+    assert.ok(coverage.some((p) => p.includes("cakupan baris")), coverage.join("; "));
+    const forbidden = motionProblems({ account: "footage", source: "Math.random(); L(1)", lineCount: 1, world: [], motion: [] });
+    assert.ok(forbidden.some((p) => p.includes("Math.random")), forbidden.join("; "));
+  });
+
   test("reports every nondeterministic call", () => {
     const problems = motionProblems({ account: "3d", source: "Math.random(); L(1)", lineCount: 1, world: [{ shot: "s1", cameraMoved: true, sceneMoved: true, nodes: 40 }], motion: [] });
     assert.ok(problems.some((p) => p.includes("Math.random")));

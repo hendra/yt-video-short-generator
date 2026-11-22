@@ -132,7 +132,8 @@ export const snapshotMotion = (video: VideoDefMotion, tl: Timeline): MotionSampl
 };
 
 export const motionProblems = (opts: {
-  account: "3d" | "motion";
+  /** "footage" shots bring their own motion (a trailer plays), so no samples are passed for them. */
+  account: "3d" | "motion" | "footage";
   source: string;
   lineCount: number;
   world: WorldSample[];

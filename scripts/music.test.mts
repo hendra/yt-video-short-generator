@@ -27,6 +27,7 @@ describe("resolveMusicTrack", () => {
     assert.throws(() => resolveMusicTrack("ceria", "ai-labs", "/tmp/m", () => true), /build, debug, showcase/);
     assert.throws(() => resolveMusicTrack("build", "kali-aja", "/tmp/m", () => true), /teknik, misteri, fenomena/);
     assert.throws(() => resolveMusicTrack("teknik", "sastra-mesin", "/tmp/m", () => true), /rakit, aliran, rahasia/);
+    assert.throws(() => resolveMusicTrack("teknik", "upwayyy", "/tmp/m", () => true), /mencekam, misteri, klimaks/);
     assert.throws(() => resolveMusicTrack("", "ai-labs", "/tmp/m", () => true), /build, debug, showcase/);
   });
 

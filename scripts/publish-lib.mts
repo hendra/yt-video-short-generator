@@ -3,7 +3,7 @@
  * shipped code instead of a re-implementation. No I/O, no env access.
  */
 import crypto from "node:crypto";
-import { ACCOUNT_IDS, isAccountId, type Account } from "../src/accounts.ts";
+import { ACCOUNT_IDS, isAccountId, type Account, type AccountId } from "../src/accounts.ts";
 import type { RecentPost } from "./duplicate-core.mts";
 
 /** Cloudinary signed-upload signature: sha1 of the alphabetically sorted "k=v&…" param string + <secret>. */
@@ -80,25 +80,41 @@ export const isSlot = (s: string): s is Slot => (SLOTS as string[]).includes(s);
 /** UTC ISO for a WIB "HH:MM" on WIB date YYYY-MM-DD. */
 const wibToIso = (date: string, hhmm: string): string => new Date(Date.parse(`${date}T${hhmm}:00Z`) - WIB_MS).toISOString();
 
+const airTimesFor = (slot: Slot, accountId?: AccountId): Partial<Record<Platform, string>> => {
+  const times = SLOT_TIMES[slot];
+  // Upwayyy TikTok posts on YouTube's schedule only (12:00 & 19:00 WIB; no pagi slot).
+  if (accountId === "upwayyy") {
+    return times.youtube ? { youtube: times.youtube, tiktok: times.youtube } : {};
+  }
+  return times;
+};
+
 /** ISO UTC air time for a platform in a slot, or null when the slot skips that platform. */
-export const dueAt = (slot: Slot, date: string, platform: Platform): string | null => {
-  const t = SLOT_TIMES[slot][platform];
+export const dueAt = (slot: Slot, date: string, platform: Platform, accountId?: AccountId): string | null => {
+  const t = airTimesFor(slot, accountId)[platform];
   return t ? wibToIso(date, t) : null;
 };
 
-/** First slot whose earliest air time is still ahead of `now`; after the last one, next WIB day's pagi. */
-export const slotFor = (now: Date): { slot: Slot; date: string } => {
+/** First slot whose earliest air time is still ahead of `now`; after the last one, next WIB day's first active slot. */
+export const slotFor = (now: Date, accountId?: AccountId): { slot: Slot; date: string } => {
   const today = new Date(now.getTime() + WIB_MS).toISOString().slice(0, 10);
-  for (const slot of SLOTS) {
-    const earliest = Object.values(SLOT_TIMES[slot]).sort()[0]!;
+  const active = SLOTS.filter((s) => Object.keys(airTimesFor(s, accountId)).length > 0);
+  for (const slot of active) {
+    const earliest = Object.values(airTimesFor(slot, accountId)).sort()[0]!;
     if (Date.parse(wibToIso(today, earliest)) > now.getTime()) return { slot, date: today };
   }
-  return { slot: "pagi", date: new Date(Date.parse(`${today}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10) };
+  const firstSlot = active[0] ?? "pagi";
+  return { slot: firstSlot, date: new Date(Date.parse(`${today}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10) };
 };
 
 /** Slot for a publish run: --slot/--date as a pair (fixed at run start by CI), else the slot for `now`. Returns an error string when invalid. */
-export const resolveSlot = (slot: string | undefined, date: string | undefined, now: Date): { slot: Slot; date: string } | string => {
-  if (slot === undefined && date === undefined) return slotFor(now);
+export const resolveSlot = (
+  slot: string | undefined,
+  date: string | undefined,
+  now: Date,
+  accountId?: AccountId,
+): { slot: Slot; date: string } | string => {
+  if (slot === undefined && date === undefined) return slotFor(now, accountId);
   if (slot === undefined || date === undefined) return "--slot and --date must be given together";
   if (!isSlot(slot)) return `--slot "${slot}" tidak dikenal (valid: ${SLOTS.join(", ")})`;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) return `--date "${date}" bukan YYYY-MM-DD`;

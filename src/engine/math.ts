@@ -87,6 +87,13 @@ export const orbit =
     };
   };
 
+/** Playback position inside a footage clip: follows the shot, holds the last frame when the shot outlasts it. */
+export const clipTimeAt = (t: number, spanStart: number, from: number, clipDur: number) =>
+  Math.max(from, Math.min(from + (t - spanStart), clipDur - 1 / 30));
+
+/** Slow push-in over a footage shot (the approved sample's zoom). */
+export const footageZoom = (t: number, span: ShotSpan) => 1.05 + 0.08 * clamp((t - span.s) / Math.max(1e-6, span.e - span.s));
+
 /** Seconds a 3D cut eases from the previous shot's camera into the new one (cheap stand-in for motion blur). */
 export const CUT_BLEND = 0.3;
 

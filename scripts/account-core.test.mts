@@ -13,6 +13,7 @@ import {
   resolveAccountArg,
   sastraMesinVideoProblems,
   scriptWordProblem,
+  upwayyyVideoProblems,
   voiceProblem,
 } from "./account-core.mts";
 
@@ -353,5 +354,92 @@ describe("instagramCaptionProblems", () => {
         [],
       );
     }
+  });
+});
+
+describe("upwayyyVideoProblems", () => {
+  const okIndex = 'export const VIDEO = { mode: "footage" };';
+  const okDesc = "Ringkasan lore game.\n\nCuplikan: trailer resmi Silent Hill f (Steam). Suara: AI (Google AI Studio).";
+
+  test("accepts a footage video with distinct existing clips and the credit line", () => {
+    assert.deepEqual(
+      upwayyyVideoProblems({
+        indexSource: okIndex,
+        hasWorldFile: false,
+        clipPaths: ["s1/clips/01.mp4", "s1/clips/02.mp4"],
+        clipExists: () => true,
+        publishJson: { description: okDesc },
+      }),
+      [],
+    );
+  });
+
+  test('rejects a missing mode: "footage" (even when commented out) and a world.ts', () => {
+    const missing = upwayyyVideoProblems({
+      indexSource: "export const VIDEO = {};",
+      hasWorldFile: false,
+      clipPaths: ["s1/clips/01.mp4"],
+      clipExists: () => true,
+      publishJson: { description: okDesc },
+    });
+    assert.ok(missing.some((p) => /footage/.test(p)), missing.join("; "));
+
+    const commented = upwayyyVideoProblems({
+      indexSource: 'export const VIDEO = {\n  // mode: "footage",\n};',
+      hasWorldFile: false,
+      clipPaths: ["s1/clips/01.mp4"],
+      clipExists: () => true,
+      publishJson: { description: okDesc },
+    });
+    assert.ok(commented.some((p) => /footage/.test(p)), commented.join("; "));
+
+    const withWorld = upwayyyVideoProblems({
+      indexSource: okIndex,
+      hasWorldFile: true,
+      clipPaths: ["s1/clips/01.mp4"],
+      clipExists: () => true,
+      publishJson: { description: okDesc },
+    });
+    assert.ok(withWorld.some((p) => /footage/.test(p)), withWorld.join("; "));
+  });
+
+  test("rejects a clip used twice", () => {
+    const problems = upwayyyVideoProblems({
+      indexSource: okIndex,
+      hasWorldFile: false,
+      clipPaths: ["s1/clips/01.mp4", "s1/clips/02.mp4", "s1/clips/01.mp4"],
+      clipExists: () => true,
+      publishJson: { description: okDesc },
+    });
+    assert.ok(problems.some((p) => /dipakai dua kali/.test(p)), problems.join("; "));
+  });
+
+  test("rejects a clip path that does not exist, naming it", () => {
+    const problems = upwayyyVideoProblems({
+      indexSource: okIndex,
+      hasWorldFile: false,
+      clipPaths: ["s1/clips/01.mp4", "s1/clips/02.mp4"],
+      clipExists: (p) => p !== "s1/clips/02.mp4",
+      publishJson: { description: okDesc },
+    });
+    assert.equal(problems.length, 1);
+    assert.ok(problems[0].includes("s1/clips/02.mp4"), problems.join("; "));
+  });
+
+  test("rejects a description without the Cuplikan credit line", () => {
+    const problems = upwayyyVideoProblems({
+      indexSource: okIndex,
+      hasWorldFile: false,
+      clipPaths: ["s1/clips/01.mp4"],
+      clipExists: () => true,
+      publishJson: { description: "Ringkasan lore game." },
+    });
+    assert.ok(problems.some((p) => /Cuplikan/.test(p)), problems.join("; "));
+  });
+});
+
+describe("upwayyy music moods", () => {
+  test("accepts a channel mood", () => {
+    assert.deepEqual(accountMusicProblems({ music: "misteri" }, "upwayyy"), []);
   });
 });

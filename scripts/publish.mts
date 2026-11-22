@@ -47,9 +47,6 @@ for (let i = 0; i < args.length; i += 1) {
 if (!slug) { console.error("Usage: npm run publish -- <slug> [--account <id>] [--slot <pagi|siang|malam> --date <YYYY-MM-DD>]"); process.exit(1); }
 
 const fail = (msg: string): never => { console.error(msg); process.exit(1); };
-const slotRes = resolveSlot(slotArg, dateArg, new Date());
-if (typeof slotRes === "string") fail(slotRes);
-const { slot, date: slotDate } = slotRes as Exclude<typeof slotRes, string>;
 const today = () => new Date().toISOString().slice(0, 10);
 
 const mp4Path = path.join(ROOT, "out", `${slug}-final.mp4`);
@@ -74,6 +71,17 @@ if (runAccount && runAccount !== account.id) {
 }
 if (!isConfigured(account)) {
   fail(`publish refused: akun ${account.id} belum dikonfigurasi (missing: ${missingConfigFields(account).join(", ")}) — refusing before upload`);
+}
+
+const slotRes = resolveSlot(slotArg, dateArg, new Date(), account.id);
+if (typeof slotRes === "string") fail(slotRes);
+const { slot, date: slotDate } = slotRes as Exclude<typeof slotRes, string>;
+if (
+  !dueAt(slot, slotDate, "youtube", account.id) &&
+  !dueAt(slot, slotDate, "tiktok", account.id) &&
+  !(account.buffer.instagramChannelId && dueAt(slot, slotDate, "instagram", account.id))
+) {
+  fail(`publish refused: slot "${slot}" tidak punya jadwal tayang untuk akun ${account.id}`);
 }
 
 const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME, CLOUD_KEY = process.env.CLOUDINARY_API_KEY, CLOUD_SECRET = process.env.CLOUDINARY_API_SECRET;
@@ -143,10 +151,10 @@ const bufferPost = async (input: Record<string, unknown>) => {
 
 const now = new Date();
 const timingFor = (p: Platform): PostTiming | null => {
-  const due = dueAt(slot, slotDate, p);
+  const due = dueAt(slot, slotDate, p, account.id);
   return due ? postTiming(due, now) : null;
 };
-const ytTiming = timingFor("youtube"), ttTiming = timingFor("tiktok")!, igTiming = IG ? timingFor("instagram") : null;
+const ytTiming = timingFor("youtube"), ttTiming = timingFor("tiktok"), igTiming = IG ? timingFor("instagram") : null;
 const describeTiming = (t: PostTiming | null) => (t === null ? "skip" : t.mode === "shareNow" ? "now" : t.dueAt);
 console.log(`slot=${slot} date=${slotDate} youtube=${describeTiming(ytTiming)} tiktok=${describeTiming(ttTiming)}${IG ? ` instagram=${describeTiming(igTiming)}` : ""}`);
 
@@ -156,7 +164,7 @@ const ytInput = ytTiming && {
   assets: [{ video: { url: up.secure_url! } }],
   metadata: { youtube: youtubeMetadata(account, PUB.title) },
 };
-const ttInput = {
+const ttInput = ttTiming && {
   channelId: TT, ...ttTiming, schedulingType: "automatic", needsApproval: false,
   text: PUB.tiktokCaption,
   assets: [{ video: { url: up.secure_url! } }],
@@ -164,8 +172,8 @@ const ttInput = {
 };
 const yt = ytInput ? await bufferPost(ytInput) : null;
 if (yt) console.log(`youtube: ${yt.id} status=${yt.status} ${yt.externalLink ?? ""}`);
-const tt = await bufferPost(ttInput);
-console.log(`tiktok:  ${tt.id} status=${tt.status} ${tt.externalLink ?? ""}`);
+const tt = ttInput ? await bufferPost(ttInput) : null;
+if (tt) console.log(`tiktok:  ${tt.id} status=${tt.status} ${tt.externalLink ?? ""}`);
 const ig = IG && igTiming ? await bufferPost(instagramInput(IG, up.secure_url!, instagramCaptionFor(PUB), igTiming)) : null;
 if (ig) console.log(`instagram: ${ig.id} status=${ig.status} ${ig.externalLink ?? ""}`);
 
@@ -200,7 +208,7 @@ const settle = async (post: { id: string; status: string; externalLink?: string 
   return { ...p, ok: Boolean(p.link) };
 };
 const [ytP, ttP, igP] = await Promise.all([settle(yt, ytTiming), settle(tt, ttTiming), settle(ig, igTiming)]);
-const ytLink = ytP?.link ?? null, ttLink = ttP!.link, igLink = igP?.link ?? null;
+const ytLink = ytP?.link ?? null, ttLink = ttP?.link ?? null, igLink = igP?.link ?? null;
 if ([ytP, ttP, igP].some((p) => p && !p.ok)) {
   const fmt = (n: string, p: Settled | null) => (p ? `${n}=${p.status}/${p.link ?? "pending"}` : `${n}=skip`);
   fail(`post settled with error or timeout (${fmt("yt", ytP)}, ${fmt("tt", ttP)}${IG ? `, ${fmt("ig", igP)}` : ""}) — do NOT retry blindly; check Buffer UI.`);

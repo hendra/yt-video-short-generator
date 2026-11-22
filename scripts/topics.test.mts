@@ -243,7 +243,7 @@ const snippetBlocks = (text: string): string[] =>
 describe("brief TypeScript snippets are copy-paste safe", () => {
   test("no choreography snippet declares an unused local (root tsconfig sets noUnusedLocals)", () => {
     const NEW_HELPERS = /\b(beat|pulse|between|stepIndex|flowPhase|focusOffset|poseFigure)\b/;
-    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/ai-labs.md"]) {
+    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/ai-labs.md", "ops/accounts/upwayyy.md"]) {
       const text = fs.readFileSync(path.join(ROOT, p), "utf8");
       for (const block of snippetBlocks(text).filter((b) => NEW_HELPERS.test(b))) {
         const declared = [...block.matchAll(/^\s*const (\w+)\s*=/gm)].map((m) => m[1]);
@@ -262,7 +262,7 @@ describe("brief TypeScript snippets are copy-paste safe", () => {
       for (const m of src.matchAll(/export (?:const|function|type|class) (\w+)/g)) engineExports.add(m[1]);
     }
     const ALLOWED = new Set(["t", "ctx", "L", "Kit", "kit", "poseFigure", "beat", "pulse", "between", "stepIndex", "flowPhase", "focusOffset", "keyframes", "Vec3", "CamPose", "BentoItem", "BeatCallout", "BentoGrid", "TerminalCard", "MetricPanel", "NodeFlow", "PromptCard", "ComparisonSplit", "IllustrationStage", "anak", "cards", "base", "pose", "mode", "on", "hi", "openU", "step", "box", "mat", "root", "shot", "import", "from"]);
-    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/ai-labs.md"]) {
+    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/ai-labs.md", "ops/accounts/upwayyy.md"]) {
       const text = fs.readFileSync(path.join(ROOT, p), "utf8");
       for (const block of snippetBlocks(text)) {
         for (const m of block.matchAll(/\b(base|shot)\(/g)) {
@@ -270,5 +270,62 @@ describe("brief TypeScript snippets are copy-paste safe", () => {
         }
       }
     }
+  });
+});
+
+// ---------- Upwayyy
+const uwBrief = path.join(ROOT, "ops", "accounts", "upwayyy.md");
+const uwTopics = path.join(ROOT, "ops", "topics", "upwayyy.md");
+/** `- <slug>: <judul> — appid <steamAppId> — rilis <YYYY-MM> — <sumber https> [<sumber https>]` */
+const UW_ENTRY = /^- ([a-z0-9-]+): (.+) — appid (\d+) — rilis (\d{4}-\d{2}) — (https:\/\/\S+)( https:\/\/\S+)*$/;
+
+describe("Upwayyy brief", () => {
+  test("exists", () => assert.ok(fs.existsSync(uwBrief), `missing ${uwBrief}`));
+
+  test("has every required section", () => {
+    const text = fs.readFileSync(uwBrief, "utf8");
+    for (const heading of ["## Brand", "## Suara dan nada", "## Format", "## Topik", "## Footage", "## Batas isi", "## Naskah", "## publish.json"]) {
+      assert.ok(text.includes(heading), `brief missing section ${heading}`);
+    }
+  });
+
+  test("pins the brand, footage mode, footage fetch, voice flag and credit line", () => {
+    const text = fs.readFileSync(uwBrief, "utf8");
+    assert.ok(text.includes('brand: { prefix: "Up", accent: "wayyy" }'), "brief must carry the literal brand line");
+    assert.ok(text.includes('mode: "footage"'), 'brief must document mode: "footage"');
+    assert.ok(text.includes("npm run footage"), "brief must require npm run footage");
+    assert.ok(text.includes("--account upwayyy"), "brief must carry the account flag");
+    assert.ok(text.includes("Cuplikan: trailer resmi"), "brief must carry the credit line");
+  });
+
+  test("tells the agent to fetch footage before writing the script, with the swap/stop rule", () => {
+    const text = fs.readFileSync(uwBrief, "utf8");
+    assert.match(text, /sebelum menulis naskah/i);
+    assert.match(text, /maksimal 3/i);
+  });
+});
+
+describe("Upwayyy topic backlog", () => {
+  test("exists", () => assert.ok(fs.existsSync(uwTopics), `missing ${uwTopics}`));
+
+  test("has at least 10 well-formed entries", () => {
+    const entries = fs.readFileSync(uwTopics, "utf8").split(/\r?\n/).filter((l) => l.startsWith("- "));
+    assert.ok(entries.length >= 10, `backlog has ${entries.length} entries, need >= 10`);
+    const bad = entries.filter((l) => !UW_ENTRY.test(l));
+    assert.deepEqual(bad, [], `malformed entries: ${bad.join(" | ")}`);
+  });
+
+  test("every entry is a 2025-05-or-later release with an app id and a source", () => {
+    for (const line of fs.readFileSync(uwTopics, "utf8").split(/\r?\n/).filter((l) => l.startsWith("- "))) {
+      const m = line.match(UW_ENTRY);
+      assert.ok(m, `malformed entry: ${line}`);
+      assert.ok(m[4] >= "2025-05", `${line} is older than 2025-05`);
+      assert.ok(Number(m[3]) > 0, `${line} has no app id`);
+    }
+  });
+
+  test("slugs are unique", () => {
+    const slugs = fs.readFileSync(uwTopics, "utf8").split(/\r?\n/).filter((l) => UW_ENTRY.test(l)).map((l) => l.slice(2).split(":")[0]);
+    assert.equal(new Set(slugs).size, slugs.length, "duplicate slugs in backlog");
   });
 });

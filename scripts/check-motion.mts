@@ -14,7 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { lineCoverage, motionProblems, snapshotMotion, snapshotWorld } from "./motion-gate-core.mts";
 import { readScript, videoDir } from "./lib.mts";
-import type { VideoDef } from "../src/engine/types";
+import type { VideoDef, VideoDef3D } from "../src/engine/types";
 
 const slug = process.argv[2];
 if (!slug) {
@@ -43,10 +43,10 @@ if (!video) {
   process.exit(1);
 }
 
-const world = video.mode === "motion" ? [] : snapshotWorld(video, video.timeline);
+const world = video.mode === "3d" || video.mode === undefined ? snapshotWorld(video as VideoDef3D, video.timeline) : [];
 const motion = video.mode === "motion" ? snapshotMotion(video, video.timeline) : [];
 const problems = motionProblems({
-  account: video.mode === "motion" ? "motion" : "3d",
+  account: video.mode ?? "3d",
   source,
   lineCount,
   world,
@@ -61,5 +61,8 @@ if (problems.length) {
 
 const shots = video.timeline.shots.length;
 const { covered, ratio } = lineCoverage(source, lineCount);
-const moving = video.mode === "motion" ? motion.filter((m) => m.changed).length : world.filter((w) => w.cameraMoved || w.sceneMoved).length;
-console.log(`check-motion OK: ${slug} — ${moving}/${shots} shot bergerak, ${covered}/${lineCount} baris (${(ratio * 100).toFixed(0)}%) terikat animasi`);
+const moving =
+  video.mode === "footage"
+    ? `${shots} shot cuplikan`
+    : `${(video.mode === "motion" ? motion.filter((m) => m.changed) : world.filter((w) => w.cameraMoved || w.sceneMoved)).length}/${shots} shot bergerak`;
+console.log(`check-motion OK: ${slug} — ${moving}, ${covered}/${lineCount} baris (${(ratio * 100).toFixed(0)}%) terikat animasi`);

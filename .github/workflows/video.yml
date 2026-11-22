@@ -15,7 +15,7 @@ on:
         default: false
         type: boolean
       account:
-        description: "Channel account for this run (kali-aja | ai-labs | cerpenek | sastra-mesin). Empty = kali-aja."
+        description: "Channel account for this run (kali-aja | ai-labs | cerpenek | sastra-mesin | upwayyy). Empty = kali-aja."
         required: false
         default: 'kali-aja'
         type: string
@@ -115,7 +115,9 @@ jobs:
       - name: Publish slot
         id: slot
         shell: bash # pipefail: a failing slot.mts must fail here, not hours later in publish
-        run: npx tsx scripts/slot.mts | tee -a "$GITHUB_OUTPUT"
+        env:
+          ACCOUNT: ${{ inputs.account || github.event.client_payload.account || 'kali-aja' }}
+        run: npx tsx scripts/slot.mts --account "$ACCOUNT" | tee -a "$GITHUB_OUTPUT"
 
       # Resolve the account: sets ACCOUNT, ACCOUNT_LABEL, BRAND_LINE, YOUTUBE_CATEGORY_ID,
       # AGENT_MODEL, AGENT_FILES, AGENT_PROMPT, CATALOG_PATH. Fails fast — before the agent and
@@ -386,7 +388,7 @@ jobs:
             echo "file 'chunk-$i.mp4'" >> out/chunks.txt
           done
           ffmpeg -y -v error -f concat -safe 0 -i out/chunks.txt -i out/audio.wav -map 0:v -map 1:a -c:v copy \
-            -af loudnorm=I=-14:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 192k -movflags +faststart "out/$SLUG-final.mp4"
+            -af loudnorm=I=-14:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 256k -movflags +faststart "out/$SLUG-final.mp4"
           GOT=$(ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of csv=p=0 "out/$SLUG-final.mp4")
           [ "$GOT" = "$FRAMES" ] || { echo "assembled video has $GOT frames, expected $FRAMES"; exit 1; }
           ffprobe -v error -show_entries stream=codec_name,duration -of csv=p=0 "out/$SLUG-final.mp4"

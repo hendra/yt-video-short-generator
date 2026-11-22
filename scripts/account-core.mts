@@ -162,6 +162,32 @@ export const sastraMesinVideoProblems = (opts: { indexSource: string; hasWorldFi
   return problems;
 };
 
+/** Rules specific to upwayyy videos: Steam trailer footage only — footage mode, no world.ts, every shot's clip exists and is used once, credit line in the description. */
+export const upwayyyVideoProblems = (opts: {
+  indexSource: string;
+  hasWorldFile: boolean;
+  clipPaths: string[];
+  clipExists: (p: string) => boolean;
+  publishJson: { description?: unknown } | null;
+}): string[] => {
+  const problems: string[] = [];
+  const indexCode = opts.indexSource.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  if (!/mode\s*:\s*["']footage["']/.test(indexCode) || opts.hasWorldFile) {
+    problems.push('upwayyy wajib mode: "footage" (trailer Steam), bukan world.ts 3D');
+  }
+  const seen = new Set<string>();
+  for (const clip of opts.clipPaths) {
+    if (seen.has(clip)) problems.push(`klip ${clip} dipakai dua kali — satu klip per shot`);
+    seen.add(clip);
+    if (!opts.clipExists(clip)) problems.push(`klip ${clip} tidak ada di public/`);
+  }
+  const desc = opts.publishJson?.description;
+  if (typeof desc !== "string" || !/Cuplikan:\s*trailer resmi/i.test(desc) || !/Suara:\s*AI/i.test(desc)) {
+    problems.push('publish.json description wajib berisi "Cuplikan: trailer resmi <Game> (Steam). Suara: AI (Google AI Studio)."');
+  }
+  return problems;
+};
+
 /** Rules for config.json.music per account: must pick one of that channel's moods. */
 export const accountMusicProblems = (configJson: { music?: unknown } | null, accountId: AccountId): string[] => {
   if (!configJson) return ['config.json wajib ada dan berisi field "music"'];

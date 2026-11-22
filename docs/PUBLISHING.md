@@ -53,6 +53,7 @@ Buffer free menolak post YouTube ke-3 per hari per channel (`LimitReachedError: 
 | malam (17:30) | 19:00 | 19:00 | 20:00 |
 
 \* hanya akun dengan `instagramChannelId`.
+- Khusus `upwayyy`: TikTok mengikuti jadwal YouTube (12:00 & 19:00 WIB, 2×/hari; tidak tayang dan tidak di-dispatch cron pada slot pagi 05:30).
 
 - Slot ditetapkan di awal run (`scripts/slot.mts`, job `build`) dan diteruskan ke `npm run publish -- <slug> --slot <s> --date <YYYY-MM-DD>`; tanpa flag, publish memakai slot berikutnya dari jam sekarang.
 - Jam tayang yang sudah lewat saat publish → platform itu `shareNow` (tidak gagal).

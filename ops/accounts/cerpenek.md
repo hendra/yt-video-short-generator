@@ -65,7 +65,7 @@ Penontonnya anak 5–10 tahun. Ini aturan keras:
 
 ## Scene 3D
 
-Tampilannya **diorama mainan kayu**: adegan kecil di atas alas bulat, tokoh seperti boneka kayu. Hangat dan sederhana.
+Tampilannya **diorama *Nusantara Figurine***: adegan kecil hangat di atas alas bulat, tokoh bergaya figurin Nusantara yang rapi dan bulat dengan mata kartun ekspresif, senyum lembut, serta kerudung pashmina bertumpuk (bukan kotak kaku).
 
 **Pakai prefab di bawah ini. Jangan merakit tokoh atau hewan sendiri dari `kit.box/cyl/ball`.** `kit.box/cyl/ball` hanya untuk benda: benda kecil pendukung (batu, peti, meja) dan benda pusat cerita (lihat "Cerita tentang benda dan bangunan").
 
@@ -105,6 +105,7 @@ anak.legL.rotation.x = Math.sin(t * 6) * 0.3;     // berjalan di tempat
 raja.root.position.x = lerp(1.0, 0.2, ramp(t, L(4).s, L(4).e));   // berjalan
 burung.wingL.rotation.z = -0.5 + Math.sin(t * 9) * 0.5;
 burung.wingR.rotation.z = 0.5 - Math.sin(t * 9) * 0.5;
+kancil.tail.rotation.y = Math.sin(t * 4) * 0.3;   // animal mengembalikan root, head, tail
 ikan.tail.rotation.y = Math.sin(t * 5) * 0.5;
 ```
 

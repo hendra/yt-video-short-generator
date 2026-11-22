@@ -2,7 +2,7 @@
  * Pick one weighted, current short-form format at random.
  *   npx tsx scripts/pick-format.mts [--account <id>]
  * Prints JSON consumed by the agent before writing naskah.txt.
- * The pool is per account: Kali Aja keeps its promotion-format mix; AI Labs and Cerpenek have their own.
+ * The pool is per account: Kali Aja keeps its promotion-format mix; AI Labs, Cerpenek, Sastra Mesin and Upwayyy have their own.
  */
 import { randomInt } from "node:crypto";
 import { pathToFileURL } from "node:url";
@@ -72,11 +72,24 @@ const SASTRA_MESIN: Format[] = [
   { id: "kenapa-bunyi", weight: 1, name: "Kenapa Bunyi", instruction: "open with a sound, click, smell or light users notice; reveal which part makes it; show the mechanism behind it; say what that signal tells the user; end with a CTA." },
 ];
 
+// Upwayyy: the lore of one recent horror game told as a story over its trailer footage. Every format
+// opens with a personal gamer aside, warns "spoiler dikit", tells the story beats seriously, slides in
+// one honest reaction mid-video (the "aside"), and ends on a loop line back into the hook.
+const UPWAYYY: Format[] = [
+  { id: "lore-recap", weight: 3, name: "Lore Recap", instruction: "personal gamer aside in the hook (why this game got under your skin); short spoiler warning; lay out the game's backstory in order from its opening to the turning point; one honest aside reaction mid-video; end on a loop line back into the hook. Facts only from fetched sources, theories labelled 'teorinya'." },
+  { id: "ending-explained", weight: 2, name: "Ending Explained", instruction: "personal gamer aside on the hook (how the ending sat with you); short spoiler warning; walk the last act in order and what it actually reveals; one honest aside reaction mid-video; end on a loop line back to the hook. Only what the sources state, theories labelled." },
+  { id: "villain-origin", weight: 2, name: "Villain Origin", instruction: "personal gamer aside in the hook (this antagonist is the one you cannot shake); short spoiler warning; trace who they were, what broke them, and what they became; one honest aside reaction mid-video; end on a loop line back to the hook. Sourced facts only, speculations labelled." },
+  { id: "hidden-detail", weight: 2, name: "Hidden Detail", instruction: "personal gamer aside on the hook (the detail you only caught on a second run); short spoiler warning; reveal the clue, where it sits, and what it changes; one honest aside reaction mid-video; end on a loop line back to the hook. Only details the sources document, theories labelled." },
+  { id: "timeline", weight: 1, name: "Timeline", instruction: "personal gamer aside in the hook (how the order of events clicked for you); short spoiler warning; lay the key events in chronological order; one honest aside reaction mid-video; end on a loop line back to the hook. Dates and events from the sources only, gaps labelled as gaps." },
+  { id: "character-story", weight: 1, name: "Character Story", instruction: "personal gamer aside on the hook (why this one character stuck); short spoiler warning; tell their arc from first appearance to their fate; one honest aside reaction mid-video; end on a loop line back to the hook. Facts only from the sources, theories labelled." },
+];
+
 export const FORMATS_BY_ACCOUNT: Record<AccountId, Format[]> = {
   "kali-aja": KALI_AJA,
   "ai-labs": AI_LABS,
   cerpenek: CERPENEK,
   "sastra-mesin": SASTRA_MESIN,
+  upwayyy: UPWAYYY,
 };
 
 export const formatsFor = (accountId: AccountId | string = DEFAULT_ACCOUNT): Format[] => {

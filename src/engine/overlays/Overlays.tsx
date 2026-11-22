@@ -9,6 +9,18 @@ const INK = "#1d2328";
 const CREAM = "#f4f1ea";
 const GREEN = "#1f9e6e";
 const MINT = "#7fe3c4";
+const UPWAYYY_RED = "#ff2a2a";
+
+/** Theme accent: red for upwayyy, the mint dark-tech has always used. */
+export const accentOf = (theme: OverlayTheme): string => (theme === "upwayyy" ? UPWAYYY_RED : MINT);
+const accentBorder = (theme: OverlayTheme, a: number): string => `rgba(${theme === "upwayyy" ? "255, 42, 42" : "127, 227, 196"}, ${a})`;
+/** Chip/tag accents: cyan on dark-tech, red on upwayyy. */
+const skyAccent = (theme: OverlayTheme): string => (theme === "upwayyy" ? UPWAYYY_RED : "#38bdf8");
+/** The softer accent used on chip/tag/caption-box borders (upwayyy is a touch stronger). */
+const skyBorder = (theme: OverlayTheme): string => (theme === "upwayyy" ? "rgba(255, 42, 42, 0.4)" : "rgba(56, 189, 248, 0.3)");
+
+/** Both dark layouts: white ink on dark panels. */
+const isDark = (theme: OverlayTheme): boolean => theme === "dark-tech" || theme === "upwayyy";
 
 // SASTRA MESIN "blueprint" look: light drafting paper, navy ink, cyan = flow/energy, orange = heat/moving parts.
 const BP = { paper: "#F4F5F6", navy: "#101820", cyan: "#20C9C3", orange: "#FF8A36", steel: "#81909C", red: "#d6453a" };
@@ -43,12 +55,12 @@ const Title: React.FC<{ text: string; highlightColor: string }> = ({ text, highl
 
 const Header: React.FC<{ shot: OverlayShot; local: number; theme: OverlayTheme }> = ({ shot, local, theme }) => {
   const k = clamp(local / 0.35);
-  const dark = theme === "dark-tech";
+  const dark = isDark(theme);
   return (
     <div style={{ alignSelf: "stretch", opacity: k, transform: `translateY(${(1 - k) * 24}px)` }}>
-      <div style={{ font: `600 30px ${FONT.mono}`, letterSpacing: 5, color: dark ? MINT : "#5c6670", textTransform: "uppercase" }}>{shot.label}</div>
+      <div style={{ font: `600 30px ${FONT.mono}`, letterSpacing: 5, color: dark ? accentOf(theme) : "#5c6670", textTransform: "uppercase" }}>{shot.label}</div>
       <div style={{ font: `800 66px/1.05 ${FONT.display}`, letterSpacing: -1.5, color: dark ? "#f8fafc" : INK, marginTop: 10 }}>
-        <Title text={shot.title} highlightColor={dark ? MINT : GREEN} />
+        <Title text={shot.title} highlightColor={dark ? accentOf(theme) : GREEN} />
       </div>
     </div>
   );
@@ -57,8 +69,8 @@ const Header: React.FC<{ shot: OverlayShot; local: number; theme: OverlayTheme }
 const Chip: React.FC<{ shot: OverlayShot; t: number; theme: OverlayTheme }> = ({ shot, t, theme }) => {
   const c = shot.chip?.(t);
   if (!c) return null;
-  if (theme === "dark-tech") {
-    const border = c.red ? "#f87171" : "#38bdf8";
+  if (isDark(theme)) {
+    const border = c.red ? "#f87171" : skyAccent(theme);
     return (
       <div style={{ marginTop: 17 }}>
         <span style={{ display: "inline-block", padding: "8px 14px", border: `2px solid ${border}`, borderBottom: "none", borderRadius: "8px 8px 0 0", background: "#0b0f17", font: `400 22px ${FONT.mono}`, letterSpacing: 3, color: border }}>
@@ -232,7 +244,7 @@ const Callouts: React.FC<{ shot: OverlayShot; t: number; pose: CamPose; fov: num
 };
 
 /** The overlay look a video renders with: its own `theme`, else the mode's long-standing default. */
-export const themeOf = (video: VideoDef): OverlayTheme => video.theme ?? (video.mode === "motion" ? "dark-tech" : "cream");
+export const themeOf = (video: VideoDef): OverlayTheme => video.theme ?? (video.mode === "motion" ? "dark-tech" : video.mode === "footage" ? "upwayyy" : "cream");
 
 export const shouldShowCaptions = (captions?: boolean): boolean => captions !== false;
 
@@ -249,12 +261,12 @@ export const captionBoxStyle = (theme: OverlayTheme): React.CSSProperties => {
       color: BP.navy,
     };
   }
-  const dark = theme === "dark-tech";
+  const dark = isDark(theme);
   return {
     display: "inline-block",
     padding: "14px 26px",
     background: dark ? "rgba(11, 15, 23, 0.92)" : "rgba(24,30,34,.88)",
-    border: dark ? "1px solid rgba(56, 189, 248, 0.3)" : undefined,
+    border: dark ? `1px solid ${skyBorder(theme)}` : undefined,
     borderRadius: 14,
     font: `800 60px ${FONT.ui}`,
     lineHeight: 1.32,
@@ -280,7 +292,7 @@ const Captions: React.FC<{ tl: Timeline; t: number; theme: OverlayTheme }> = ({ 
           const activeStyle: React.CSSProperties | undefined = on
             ? bp
               ? { textDecoration: "underline", textDecorationColor: BP.cyan, textDecorationThickness: 8, textUnderlineOffset: 8 }
-              : { color: MINT, textDecoration: "underline", textDecorationThickness: 5, textUnderlineOffset: 8 }
+              : { color: accentOf(theme), textDecoration: "underline", textDecorationThickness: 5, textUnderlineOffset: 8 }
             : undefined;
           return (
             <React.Fragment key={k}>
@@ -304,7 +316,7 @@ export const Overlays: React.FC<{
 }> = ({ video, shot, shotStart, t, pose, theme = "cream" }) => {
   const tl = video.timeline;
   if (theme === "blueprint") return <BlueprintOverlays video={video} shot={shot} shotStart={shotStart} t={t} pose={pose} />;
-  const dark = theme === "dark-tech";
+  const dark = isDark(theme);
   const cuts = tl.shots.filter((s) => s.s > 0).map((s) => s.s);
   const flash = dark ? 0 : Math.max(0, ...cuts.map((c) => 1 - Math.abs(t - c) / 0.16));
   const ctaOn = Boolean(video.cta && t > tl.lines[video.cta.fromLine - 1].s - 0.1);
@@ -335,13 +347,13 @@ export const Overlays: React.FC<{
               padding: "16px 26px",
               borderRadius: 16,
               background: dark ? "rgba(15, 23, 42, 0.92)" : "#fff",
-              border: dark ? "2px solid rgba(127, 227, 196, 0.55)" : `3px solid ${INK}`,
+              border: dark ? `2px solid ${accentBorder(theme, 0.55)}` : `3px solid ${INK}`,
               font: `700 34px ${FONT.ui}`,
               color: dark ? "#f8fafc" : INK,
             }}
           >
             <svg width={34} height={34} viewBox="0 0 24 24" style={{ verticalAlign: -6, marginRight: 10 }}>
-              <path d="M4 4h16v11H9l-5 4z" fill="none" stroke={dark ? MINT : INK} strokeWidth={2.4} strokeLinejoin="round" />
+              <path d="M4 4h16v11H9l-5 4z" fill="none" stroke={dark ? accentOf(theme) : INK} strokeWidth={2.4} strokeLinejoin="round" />
             </svg>
             {video.cta.text}
           </div>
@@ -355,13 +367,13 @@ export const Overlays: React.FC<{
           padding: "10px 18px",
           borderRadius: 12,
           background: dark ? "#111a2b" : INK,
-          border: dark ? "1px solid rgba(127, 227, 196, 0.35)" : undefined,
+          border: dark ? `1px solid ${accentBorder(theme, 0.35)}` : undefined,
           color: "#fff",
           font: `700 26px ${FONT.ui}`,
         }}
       >
         {video.brand.prefix}
-        <span style={{ color: MINT }}>{video.brand.accent}</span>
+        <span style={{ color: accentOf(theme) }}>{video.brand.accent}</span>
       </div>
       {shot.tag ? (
         <div
@@ -372,7 +384,7 @@ export const Overlays: React.FC<{
             padding: "6px 12px",
             borderRadius: 8,
             background: dark ? "rgba(15, 23, 42, 0.85)" : "rgba(29,35,40,.75)",
-            border: dark ? "1px solid rgba(56, 189, 248, 0.3)" : undefined,
+            border: dark ? `1px solid ${skyBorder(theme)}` : undefined,
             color: dark ? "#bae6fd" : "#fff",
             font: `400 20px ${FONT.mono}`,
             letterSpacing: 2,

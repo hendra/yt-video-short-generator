@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { videoDir, readScript, publishedVideosPath } from "./lib.mts";
-import { DEFAULT_ACCOUNT, isAccountId, type AccountId } from "../src/accounts.ts";
+import { ACCOUNT_IDS, DEFAULT_ACCOUNT, isAccountId, type AccountId } from "../src/accounts.ts";
 import { findDuplicate, type CandidatePost, type RecentPost } from "./duplicate-core.mts";
 
 const slug = process.argv[2];
@@ -23,7 +23,7 @@ const defaultCatalogPath = (): string => {
     const parsed = JSON.parse(fs.readFileSync(publishPathForSlug, "utf8")) as { account?: unknown };
     const account = typeof parsed.account === "string" ? parsed.account : DEFAULT_ACCOUNT;
     if (!isAccountId(account)) {
-      console.error(`publish.json: account "${String(parsed.account)}" is not a known account (valid: kali-aja, ai-labs)`);
+      console.error(`publish.json: account "${String(parsed.account)}" is not a known account (valid: ${ACCOUNT_IDS.join(", ")})`);
       process.exit(1);
     }
     return publishedVideosPath(account as AccountId);

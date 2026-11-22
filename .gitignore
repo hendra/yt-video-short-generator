@@ -13,6 +13,11 @@ public/*/music.wav
 public/*/.vo.mp3.*.tmp
 src/videos/*/.alignment.json.*.tmp
 
+# Steam trailer clips + their index + staging dir (npm run footage regenerates them)
+public/*/clips/
+public/*/clips.json
+public/*/.clips.tmp/
+
 # superpowers scratch (SDD workspace)
 .superpowers/
 

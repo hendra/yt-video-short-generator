@@ -16,4 +16,10 @@ Config.setJpegQuality(95);
 // is guessed per player and tends to look washed out).
 Config.setColorSpace("bt709");
 // Visually lossless master: the platforms re-encode whatever we upload, so give them a clean source.
-Config.setCrf(16);
+// Local GPU renders pass a high bitrate instead of CRF (NVENC ignores CRF); CI stays on CRF 16.
+if (process.env.REMOTION_GPU === "1") {
+  Config.setHardwareAcceleration("if-possible");
+  Config.setVideoBitrate("18M");
+} else {
+  Config.setCrf(16);
+}

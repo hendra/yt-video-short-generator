@@ -7,7 +7,8 @@ describe("per-account format pools", () => {
   test("every account has a non-empty, weighted, unique-id pool", () => {
     for (const id of ACCOUNT_IDS) {
       const pool = formatsFor(id);
-      assert.ok(pool.length >= 7, `${id} pool too small: ${pool.length}`);
+      // upwayyy's pool is 6 story angles (one game yields several videos), the rest hold 7+.
+      assert.ok(pool.length >= (id === "upwayyy" ? 6 : 7), `${id} pool too small: ${pool.length}`);
       assert.ok(pool.every((format) => format.weight > 0 && format.instruction.length > 20), `${id}: bad weight/instruction`);
       assert.equal(new Set(pool.map((f) => f.id)).size, pool.length, `${id}: duplicate ids`);
       assert.ok(pool.reduce((sum, f) => sum + f.weight, 0) > pool.length, `${id}: weights do not outweigh the count`);
@@ -41,6 +42,23 @@ describe("Cerpenek pool", () => {
   test("is a story pool: no explainer or tutorial frameworks", () => {
     const ids = formatsFor("cerpenek").map((f) => f.id);
     assert.deepEqual(ids, ["dongeng-klasik", "asal-usul-tempat", "tokoh-sejarah", "tebak-dulu", "kenapa-begitu", "sahabat-hewan", "asal-usul-benda"]);
+  });
+});
+
+describe("Upwayyy pool", () => {
+  test("is a story pool of its own: lore angles, none shared with Kali Aja", () => {
+    const ids = formatsFor("upwayyy").map((f) => f.id);
+    assert.deepEqual(ids, ["lore-recap", "ending-explained", "villain-origin", "hidden-detail", "timeline", "character-story"]);
+    const kali = new Set(formatsFor("kali-aja").map((f) => f.id));
+    assert.ok(ids.every((id) => !kali.has(id)));
+  });
+  test("weights favour the lore recap and ending explainers", () =>
+    assert.deepEqual(formatsFor("upwayyy").map((f) => f.weight), [3, 2, 2, 2, 1, 1]));
+  test("every format carries the personal aside and the spoiler warning", () => {
+    for (const f of formatsFor("upwayyy")) {
+      assert.match(f.instruction, /aside/, f.id);
+      assert.match(f.instruction, /spoiler/i, f.id);
+    }
   });
 });
 
