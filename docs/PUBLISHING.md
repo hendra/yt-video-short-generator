@@ -38,6 +38,8 @@ Kedua akun sudah **aktif dan tayang**: AI Labs tayang perdana pada **2026-11-15*
 
 **Akun `sastra-mesin` (masuk cron).** Brand prefix `Sastra ` + accent `Mesin`, `categoryId` `27`, `madeForKids: false`, voice `id-id-tutor-1`, tema 3D `blueprint`. Buffer organization `6afdf08dd10011a8be72ed75`, YouTube `6afdf52fece6dfde5f101631`, TikTok `6afdf54bece6dfde5f101af0`, Instagram Reels `6afe07c2ece6dfde5f116be8` (memakai `instagramCaption`, fallback ke `tiktokCaption` tersanitasi bila absen). Urutan aktivasi: (1) ID Buffer di `src/accounts.ts` (sudah); (2) GitHub Environment `sastra-mesin` (sudah); (3) tiga track instrumental `public/sastra-mesin/music/{rakit,aliran,rahasia}.mp3` (sudah); (4) `sastra-mesin` masuk ke `ACCOUNTS` di `ops/cloudflare-cron/wrangler.toml` (deploy ulang worker dengan `npx wrangler deploy --config ops/cloudflare-cron/wrangler.toml`).
 
+**Akun `mandor-bangunan` (placeholder `TODO_`, belum masuk cron).** Brand prefix `Mandor ` + accent `Bangunan`, `categoryId` `27`, `madeForKids: false`, voice `id-id-podcaster-1`, tema 3D default `"cream"` (identik dengan `kali-aja`), musik `public/mandor-bangunan/music/{teknik,misteri,fenomena}.mp3`. Akan tayang di YouTube + TikTok + Instagram Reels (`instagramCaption` wajib) pada jadwal slot yang sama (12:00 & 19:00 WIB). Urutan aktivasi: (1) isi ID Buffer (`orgId`, `youtubeChannelId`, `tiktokChannelId`, `instagramChannelId`) di `src/accounts.ts`; (2) buat GitHub Environment `mandor-bangunan`; (3) uji `gh workflow run video-run --ref main -f account=mandor-bangunan -f dry_run=true`; (4) tambahkan `mandor-bangunan` ke `ACCOUNTS` di `ops/cloudflare-cron/wrangler.toml` lalu deploy ulang worker.
+
 **"Made for kids" per akun.** `madeForKids` di `src/accounts.ts` menentukan nilai yang dikirim ke YouTube di setiap post (`youtubeMetadata` di `scripts/publish-lib.mts`); `kali-aja` dan `ai-labs` = `false`. Akun yang ditujukan untuk anak memakai `true` — akibatnya komentar dan notifikasi mati di video itu — dan audiens channel juga disetel "untuk anak" di YouTube Studio. TikTok tidak punya setelan setara.
 
 Publikasi tetap per akun: `npm run publish -- <slug>` membaca `account` dari `src/videos/<slug>/publish.json`; `--account <id>` (opsional) hanyalah cross-check dan menolak kalau tidak cocok. Hal yang sama berlaku untuk `scripts/fetch-published-videos.mts --account` dan `scripts/check-duplicates.mts --db`.
@@ -115,7 +117,7 @@ TikTok — same mutation with:
 - `metadata`: `{ "tiktok": { "isAiGenerated": true, "title": "<hook singkat>" } }`
 - `text`: caption hook + CTA + sumber + "Suara: AI (Google AI Studio)" + hashtags
 
-Instagram Reels (accounts with optional `instagramChannelId`, i.e. `kali-aja`, `ai-labs`, `sastra-mesin`) — same mutation with:
+Instagram Reels (accounts with optional `instagramChannelId`, i.e. `kali-aja`, `ai-labs`, `sastra-mesin`, `mandor-bangunan`) — same mutation with:
 - `channelId`: per account (`6aed5544e29c69a1717ba62e` / `6af92062ece6dfde5fcba082` / `6afe07c2ece6dfde5f116be8`)
 - `metadata`: `{ "instagram": { "type": "reel", "shouldShareToFeed": true, "isAiGenerated": true } }`
 - `text`: `instagramCaption` (≤ 2,200 chars, fallback to sanitized `tiktokCaption` when absent; `#shorts`/`#short`/`#fyp`/`#tiktok` stripped automatically by `instagramCaptionFor`)

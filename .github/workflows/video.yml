@@ -15,7 +15,7 @@ on:
         default: false
         type: boolean
       account:
-        description: "Channel account for this run (kali-aja | ai-labs | cerpenek | sastra-mesin | upwayyy). Empty = kali-aja."
+        description: "Channel account for this run (kali-aja | ai-labs | cerpenek | sastra-mesin | upwayyy | mandor-bangunan). Empty = kali-aja."
         required: false
         default: 'kali-aja'
         type: string
