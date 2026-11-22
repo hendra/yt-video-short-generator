@@ -28,7 +28,15 @@ describe("resolveMusicTrack", () => {
     assert.throws(() => resolveMusicTrack("build", "kali-aja", "/tmp/m", () => true), /teknik, misteri, fenomena/);
     assert.throws(() => resolveMusicTrack("teknik", "sastra-mesin", "/tmp/m", () => true), /rakit, aliran, rahasia/);
     assert.throws(() => resolveMusicTrack("teknik", "upwayyy", "/tmp/m", () => true), /mencekam, misteri, klimaks/);
+    assert.throws(() => resolveMusicTrack("build", "mandor-bangunan", "/tmp/m", () => true), /teknik, misteri, fenomena/);
     assert.throws(() => resolveMusicTrack("", "ai-labs", "/tmp/m", () => true), /build, debug, showcase/);
+  });
+
+  test("mandor-bangunan MP3 tracks exist on disk for all 3 moods", () => {
+    for (const mood of ["teknik", "misteri", "fenomena"]) {
+      const p = resolveMusicTrack(mood, "mandor-bangunan");
+      assert.ok(p && fs.existsSync(p), `missing ${p}`);
+    }
   });
 
   test("rejects valid mood when MP3 file does not exist", () => {
