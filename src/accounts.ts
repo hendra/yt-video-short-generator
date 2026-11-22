@@ -17,8 +17,8 @@ export type Account = {
   label: string;
   /** Brand overlay shown on every frame (prefix + highlighted accent). */
   brand: { prefix: string; accent: string };
-  /** Buffer org + channels (YouTube, TikTok, optional Instagram) inside it. */
-  buffer: { orgId: string; youtubeChannelId: string; tiktokChannelId: string; instagramChannelId?: string };
+  /** Buffer org + channels (YouTube, TikTok, Instagram) inside it; at least one channel id must be set. */
+  buffer: { orgId: string; youtubeChannelId?: string; tiktokChannelId?: string; instagramChannelId?: string };
   /** YouTube video category id. */
   youtubeCategoryId: string;
   /** YouTube "made for kids" declaration sent with every upload (true disables comments + notifications there). */
@@ -138,16 +138,14 @@ export const ACCOUNTS: Record<AccountId, Account> = {
     },
   },
   // Mandor Bangunan: construction, buildings, bridges, infrastructure & civil engineering explainers on Kali Aja's 3D cream look and voice.
-  // Buffer ids are placeholders until channels are connected; `--require-configured` keeps CI/cron blocked until then.
+  // Currently publishing to TikTok only; YouTube and Instagram channels can be added later by filling their IDs here.
   "mandor-bangunan": {
     id: "mandor-bangunan",
     label: "Mandor Bangunan",
     brand: { prefix: "Mandor ", accent: "Bangunan" },
     buffer: {
-      orgId: "TODO_MANDOR_ORG_ID",
-      youtubeChannelId: "TODO_MANDOR_YT_ID",
-      tiktokChannelId: "TODO_MANDOR_TT_ID",
-      instagramChannelId: "TODO_MANDOR_IG_ID",
+      orgId: "6b02ca2707e3daab8001434d",
+      tiktokChannelId: "6b02cab28541f09ecb623894",
     },
     youtubeCategoryId: "27",
     madeForKids: false,
@@ -170,16 +168,23 @@ export const accountById = (id?: string | null): Account => {
   return ACCOUNTS[id];
 };
 
-/** Config fields that still hold a TODO_ placeholder, e.g. ["buffer.orgId", "tts.voice"]. */
-export const missingConfigFields = (account: Account): string[] => [
-  ...(["orgId", "youtubeChannelId", "tiktokChannelId", "instagramChannelId"] as const)
-    .filter((field) => {
-      const val = account.buffer[field];
-      return typeof val === "string" && val.startsWith("TODO_");
-    })
-    .map((field) => `buffer.${field}`),
-  ...(account.tts.voice.startsWith("TODO_") ? ["tts.voice"] : []),
-];
+/** Config fields that still hold a TODO_ placeholder, or "buffer.channels" when no publishing channel is configured. */
+export const missingConfigFields = (account: Account): string[] => {
+  const missing = [
+    ...(["orgId", "youtubeChannelId", "tiktokChannelId", "instagramChannelId"] as const)
+      .filter((field) => {
+        const val = account.buffer[field];
+        return typeof val === "string" && val.startsWith("TODO_");
+      })
+      .map((field) => `buffer.${field}`),
+    ...(account.tts.voice.startsWith("TODO_") ? ["tts.voice"] : []),
+  ];
+  const hasChannel = [account.buffer.youtubeChannelId, account.buffer.tiktokChannelId, account.buffer.instagramChannelId].some(
+    (id) => typeof id === "string" && id.trim() !== "",
+  );
+  if (!hasChannel) missing.push("buffer.channels");
+  return missing;
+};
 
 /** True when the account is safe to publish to (no placeholder left). */
 export const isConfigured = (account: Account): boolean => missingConfigFields(account).length === 0;

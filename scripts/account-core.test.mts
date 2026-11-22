@@ -331,12 +331,13 @@ describe("sastraMesinVideoProblems", () => {
 });
 
 describe("instagramCaptionProblems", () => {
-  test("skips accounts without Instagram (cerpenek)", () => {
+  test("skips accounts without Instagram (cerpenek, mandor-bangunan)", () => {
     assert.deepEqual(instagramCaptionProblems({}, ACCOUNTS.cerpenek), []);
+    assert.deepEqual(instagramCaptionProblems({}, ACCOUNTS["mandor-bangunan"]), []);
   });
 
   test("requires non-empty instagramCaption for IG-enabled accounts", () => {
-    for (const acc of [kaliAja, aiLabs, ACCOUNTS["sastra-mesin"], ACCOUNTS["mandor-bangunan"]]) {
+    for (const acc of [kaliAja, aiLabs, ACCOUNTS["sastra-mesin"]]) {
       assert.ok(instagramCaptionProblems({}, acc).some((p) => p.includes("instagramCaption")), acc.id);
       assert.ok(instagramCaptionProblems({ instagramCaption: "   " }, acc).some((p) => p.includes("instagramCaption")), acc.id);
     }
@@ -353,7 +354,7 @@ describe("instagramCaptionProblems", () => {
   });
 
   test("accepts clean instagramCaption <= 2200 chars including prefix-sharing hashtags like #shortcuts", () => {
-    for (const acc of [kaliAja, aiLabs, ACCOUNTS["sastra-mesin"], ACCOUNTS["mandor-bangunan"]]) {
+    for (const acc of [kaliAja, aiLabs, ACCOUNTS["sastra-mesin"]]) {
       assert.deepEqual(
         instagramCaptionProblems({ instagramCaption: "Hook singkat.\n\nSimpan buat nanti! #shortcuts #sains" }, acc),
         [],

@@ -111,7 +111,7 @@ describe("account registry", () => {
     for (const id of Object.values(u.buffer)) assert.equal(others.includes(id), false, `buffer id ${id} belongs to another account`);
   });
 
-  test("Mandor Bangunan has its own identity with placeholder Buffer ids", () => {
+  test("Mandor Bangunan is configured for TikTok-only with its own Buffer org and channel", () => {
     const m = ACCOUNTS["mandor-bangunan"];
     assert.equal(m.label, "Mandor Bangunan");
     assert.deepEqual(m.brand, { prefix: "Mandor ", accent: "Bangunan" });
@@ -124,13 +124,22 @@ describe("account registry", () => {
     assert.match(m.agent.prompt, /ops\/topics\/mandor-bangunan\.md/);
     assert.match(m.agent.prompt, /override ops\/ci-prompt\.md/);
     assert.match(m.agent.prompt, /docs\/AUTOPILOT\.md does NOT apply/);
-    assert.equal(isConfigured(m), false);
-    assert.deepEqual(missingConfigFields(m), [
-      "buffer.orgId",
-      "buffer.youtubeChannelId",
-      "buffer.tiktokChannelId",
-      "buffer.instagramChannelId",
-    ]);
+    assert.deepEqual(m.buffer, {
+      orgId: "6b02ca2707e3daab8001434d",
+      tiktokChannelId: "6b02cab28541f09ecb623894",
+    });
+    assert.equal(isConfigured(m), true);
+    assert.deepEqual(missingConfigFields(m), []);
+    const others = [ACCOUNTS["kali-aja"], ACCOUNTS["ai-labs"], ACCOUNTS.cerpenek, ACCOUNTS["sastra-mesin"], ACCOUNTS.upwayyy].flatMap((o) =>
+      Object.values(o.buffer),
+    );
+    for (const id of Object.values(m.buffer)) assert.equal(others.includes(id), false, `buffer id ${id} belongs to another account`);
+  });
+
+  test("an account with no channel ids counts as unconfigured", () => {
+    const a = { ...ACCOUNTS["mandor-bangunan"], buffer: { orgId: "6b02ca2707e3daab8001434d" } };
+    assert.deepEqual(missingConfigFields(a), ["buffer.channels"]);
+    assert.equal(isConfigured(a), false);
   });
 
   test("a placeholder instagramChannelId counts as unconfigured", () => {
