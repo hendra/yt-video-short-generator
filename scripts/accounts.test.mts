@@ -21,6 +21,7 @@ describe("account registry", () => {
     assert.equal(k.buffer.orgId, "6aed53e7ec5c7c6d73f3e437");
     assert.equal(k.buffer.youtubeChannelId, "6aedb753e29c69a171803f6e");
     assert.equal(k.buffer.tiktokChannelId, "6aedb7fee29c69a171804662");
+    assert.equal(k.buffer.instagramChannelId, "6aed5544e29c69a1717ba62e");
     assert.equal(k.agent.model, "opencode/deepseek-v4.1-flash-free");
     assert.ok(k.agent.files.includes("AGENTS.md"));
     assert.ok(k.agent.files.includes("docs/AUTOPILOT.md"));
@@ -38,6 +39,7 @@ describe("account registry", () => {
     assert.equal(a.label, "AI Labs");
     assert.deepEqual(a.brand, { prefix: "AI ", accent: "Labs" });
     assert.equal(a.youtubeCategoryId, "28");
+    assert.equal(a.buffer.instagramChannelId, "6af92062ece6dfde5fcba082");
     assert.deepEqual(a.agent.files, ["AGENTS.md", "ops/ci-prompt.md", "ops/accounts/ai-labs.md", "ops/topics/ai-labs.md"]);
   });
 
