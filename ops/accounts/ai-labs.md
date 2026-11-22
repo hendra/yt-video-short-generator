@@ -111,6 +111,7 @@ Pilih satu dari 3 suasana ini:
   "description": "…",
   "tiktokTitle": "…",
   "tiktokCaption": "…",
+  "instagramCaption": "…",
   "catatan": "format: <id>; …"
 }
 ```
@@ -118,8 +119,9 @@ Pilih satu dari 3 suasana ini:
 - `account` wajib `"ai-labs"` (kena gate CI kalau beda).
 - `title` ≤ 100 karakter, tanpa `<` dan `>` (YouTube menolaknya).
 - `description`: ringkasan 2–3 kalimat + (jika pakai `<PromptCard>`, lihat aturan di bawah) + `Sumber: <URL sumber resmi>` + `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).` + `#shorts` + 5–6 hashtag topik.
-- **Aturan wajib `PromptCard` (gate CI):** setiap kali `shots.tsx` memakai `<PromptCard>`, `publish.json.description` **wajib** mengandung `Prompt siap copy:` diikuti teks prompt lengkap yang bisa langsung disalin penonton (pakai kurung siku `[placeholder]`, **jangan pernah** `<placeholder>` karena YouTube menolak `<` dan `>`). Masukkan juga blok `Prompt siap copy:` ini ke `tiktokCaption` selama totalnya masih ≤ 2.200 karakter.
+- **Aturan wajib `PromptCard` (gate CI):** setiap kali `shots.tsx` memakai `<PromptCard>`, `publish.json.description` **wajib** mengandung `Prompt siap copy:` diikuti teks prompt lengkap yang bisa langsung disalin penonton (pakai kurung siku `[placeholder]`, **jangan pernah** `<placeholder>` karena YouTube menolak `<` dan `>`). Masukkan juga blok `Prompt siap copy:` ini ke `tiktokCaption` dan `instagramCaption` selama totalnya masing-masing masih ≤ 2.200 karakter (gate CI menolak `instagramCaption` tanpa `Prompt siap copy:` saat memakai `<PromptCard>`).
 - `tiktokTitle` ≤ 90 karakter (hook saja), `tiktokCaption` seperti description + `Suara: AI (Google AI Studio)`.
+- `instagramCaption` ≤ 2.200 karakter (wajib untuk Instagram Reels, lolos gate CI): baris 1 hook pendek penarik klik `"... more"` (≤ 90 karakter), diikuti ringkasan dengan keyword pencarian IG, blok `Prompt siap copy:` bila memakai `<PromptCard>` + CTA Save (*"Simpan Reels ini biar prompt-nya nggak hilang"* atau pertanyaan komentar spesifik topik), `Sumber: <URL sumber resmi>`, `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).`, dan 3–5 hashtag relevan (mis. `#ailabs #tipsai`) — **dilarang** `#shorts`, `#short`, atau `#fyp`.
 - `catatan` diawali `format: <id>;` dari `pick-format`.
 
 ## Batas klaim

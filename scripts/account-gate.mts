@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ACCOUNTS, accountById, isAccountId } from "../src/accounts.ts";
-import { accountMusicProblems, accountProblems, aiLabsVideoProblems, brandProblems, loopTailProblem, sastraMesinVideoProblems, upwayyyVideoProblems } from "./account-core.mts";
+import { accountMusicProblems, accountProblems, aiLabsVideoProblems, brandProblems, instagramCaptionProblems, loopTailProblem, sastraMesinVideoProblems, upwayyyVideoProblems } from "./account-core.mts";
 import { ROOT, videoDir } from "./lib.mts";
 
 const args = process.argv.slice(2);
@@ -35,13 +35,14 @@ const problems: string[] = [];
 
 const dir = videoDir(slug);
 const publishPath = path.join(dir, "publish.json");
-let publishJson: { description?: unknown } | null = null;
+let publishJson: { description?: unknown; instagramCaption?: unknown } | null = null;
 if (!fs.existsSync(publishPath)) {
   problems.push(`missing ${publishPath}`);
 } else {
   try {
-    publishJson = JSON.parse(fs.readFileSync(publishPath, "utf8")) as { description?: unknown };
+    publishJson = JSON.parse(fs.readFileSync(publishPath, "utf8")) as { description?: unknown; instagramCaption?: unknown };
     problems.push(...accountProblems(publishJson, account.id));
+    problems.push(...instagramCaptionProblems(publishJson, account));
   } catch {
     problems.push(`${publishPath}: not valid JSON`);
   }

@@ -27,7 +27,7 @@ import path from "node:path";
 import { ROOT, loadDotenv } from "./lib.mts";
 import { fetchPublishedVideos } from "./fetch-published-videos.mts";
 import { findDuplicate, type CandidatePost } from "./duplicate-core.mts";
-import { cloudinarySign, validatePublishJson, extractBufferError, instagramInput, youtubeSafe, youtubeMetadata, resolveSlot, dueAt, postTiming, settleAction, type Platform, type PostTiming } from "./publish-lib.mts";
+import { cloudinarySign, validatePublishJson, extractBufferError, instagramCaptionFor, instagramInput, youtubeSafe, youtubeMetadata, resolveSlot, dueAt, postTiming, settleAction, type Platform, type PostTiming } from "./publish-lib.mts";
 import { ACCOUNT_IDS, accountById, isAccountId, isConfigured, missingConfigFields } from "../src/accounts.ts";
 
 loadDotenv();
@@ -55,7 +55,7 @@ const publishPath = path.join(ROOT, "src", "videos", slug, "publish.json");
 if (!fs.existsSync(mp4Path)) fail(`No final mp4 at ${mp4Path} — render + loudnorm first.`);
 if (!fs.existsSync(publishPath)) fail(`Missing ${publishPath} — the agent must write publish.json (see ops/ci-prompt.md).`);
 
-const PUB = JSON.parse(fs.readFileSync(publishPath, "utf8")) as { account: string; title: string; description: string; tiktokTitle: string; tiktokCaption: string; catatan?: string };
+const PUB = JSON.parse(fs.readFileSync(publishPath, "utf8")) as { account: string; title: string; description: string; tiktokTitle: string; tiktokCaption: string; instagramCaption?: string; catatan?: string };
 {
   const problems = validatePublishJson(PUB);
   if (problems.length) fail(`publish.json: ${problems.join("; ")}`);
@@ -174,7 +174,7 @@ const yt = ytInput ? await bufferPost(ytInput) : null;
 if (yt) console.log(`youtube: ${yt.id} status=${yt.status} ${yt.externalLink ?? ""}`);
 const tt = ttInput ? await bufferPost(ttInput) : null;
 if (tt) console.log(`tiktok:  ${tt.id} status=${tt.status} ${tt.externalLink ?? ""}`);
-const ig = IG && igTiming ? await bufferPost(instagramInput(IG, up.secure_url!, PUB.tiktokCaption, igTiming)) : null;
+const ig = IG && igTiming ? await bufferPost(instagramInput(IG, up.secure_url!, instagramCaptionFor(PUB), igTiming)) : null;
 if (ig) console.log(`instagram: ${ig.id} status=${ig.status} ${ig.externalLink ?? ""}`);
 
 // ---------- 3. Share-now posts: poll until they settle (max 5 min). Scheduled posts: accepted = done.

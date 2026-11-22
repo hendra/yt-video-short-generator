@@ -13,6 +13,7 @@ export type CandidatePost = {
   tiktokTitle: string;
   description: string;
   tiktokCaption: string;
+  instagramCaption?: string;
 };
 export type DuplicateMatch = {
   post: RecentPost;
@@ -55,8 +56,10 @@ export const findDuplicate = (candidate: CandidatePost, recent: RecentPost[]): D
   for (const post of recent) {
     const hay = significantTokens(`${post.title ?? ""}\n${post.text}`);
     if (hay.size === 0) continue;
-    for (const field of ["title", "tiktokTitle", "description", "tiktokCaption"] as const) {
-      const needle = significantTokens(candidate[field]);
+    for (const field of ["title", "tiktokTitle", "description", "tiktokCaption", "instagramCaption"] as const) {
+      const text = candidate[field];
+      if (typeof text !== "string" || !text.trim()) continue;
+      const needle = significantTokens(text);
       const { jaccard, containment } = similarity(needle, hay);
       if (needle.size >= 4 && (containment >= MATCH_CONTAINMENT || jaccard >= MATCH_JACCARD)) {
         return { post, field, containment, jaccard };

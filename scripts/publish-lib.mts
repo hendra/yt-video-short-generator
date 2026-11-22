@@ -12,7 +12,7 @@ export const cloudinarySign = (params: Record<string, string | number>, secret: 
     .update(Object.keys(params).sort().map((k) => `${k}=${params[k]}`).join("&") + secret)
     .digest("hex");
 
-export type PublishMeta = { title: string; description: string; tiktokTitle: string; tiktokCaption: string; catatan?: string };
+export type PublishMeta = { title: string; description: string; tiktokTitle: string; tiktokCaption: string; instagramCaption?: string; catatan?: string };
 
 /** YouTube rejects "<" and ">" in titles and descriptions; swap them for full-width look-alikes. */
 export const youtubeSafe = (text: string): string => text.replaceAll("<", "＜").replaceAll(">", "＞");
@@ -46,6 +46,10 @@ export const validatePublishJson = (obj: unknown): string[] => {
     if (bytes > 5000) problems.push(`description > 5000 bytes (${bytes})`);
   }
   if (typeof PUB.tiktokCaption === "string" && PUB.tiktokCaption.length > 2200) problems.push(`tiktokCaption > 2200 chars (${PUB.tiktokCaption.length})`);
+  if (PUB.instagramCaption !== undefined) {
+    if (typeof PUB.instagramCaption !== "string" || !PUB.instagramCaption.trim()) problems.push('missing/empty "instagramCaption"');
+    else if (PUB.instagramCaption.length > 2200) problems.push(`instagramCaption > 2200 chars (${PUB.instagramCaption.length})`);
+  }
   return problems;
 };
 
@@ -128,6 +132,22 @@ export const settleAction = (timing: PostTiming, status: string): "accept" | "po
   if (timing.mode === "shareNow" || status === "sent") return "poll";
   return status === "scheduled" ? "accept" : "fail";
 };
+
+const IG_STRIPPED_TAGS = /(^|[^\w])#(?:shorts|short|youtubeshorts|fyp|foryoupage|foryou|tiktok)(?![\w-])/gi;
+
+/** Strip cross-platform tags (#shorts, #fyp, etc.), tidy whitespace, and cap at Instagram's 2,200-char limit. */
+export const sanitizeInstagramCaption = (text: string): string =>
+  text
+    .replace(IG_STRIPPED_TAGS, "$1")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/^[ \t]+|[ \t]+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, 2200);
+
+/** Pick instagramCaption when provided, otherwise fall back to tiktokCaption, always sanitized for IG. */
+export const instagramCaptionFor = (pub: Pick<PublishMeta, "tiktokCaption" | "instagramCaption">): string =>
+  sanitizeInstagramCaption(pub.instagramCaption?.trim() ? pub.instagramCaption : pub.tiktokCaption);
 
 /** Buffer CreatePostInput for an Instagram Reel shared to the main feed as well. */
 export const instagramInput = (channelId: string, videoUrl: string, caption: string, timing: PostTiming) => ({

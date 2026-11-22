@@ -29,6 +29,20 @@ describe("findDuplicate", () => {
   test("ignores empty recent posts", () => {
     assert.equal(findDuplicate(candidate, [{ text: "", title: null }]), null);
   });
+
+  test("detects duplicate via optional instagramCaption while keeping it optional", () => {
+    const distinct = {
+      title: "Judul berbeda",
+      tiktokTitle: "Hook berbeda",
+      description: "Deskripsi lain",
+      tiktokCaption: "Caption lain",
+    };
+    const recent = [{ text: "Rahasia turbin mikrohidro sungai pedesaan menghasilkan listrik stabil", platform: "instagram" }];
+    assert.equal(findDuplicate(distinct, recent), null);
+    const match = findDuplicate({ ...distinct, instagramCaption: "Turbin mikrohidro sungai pedesaan menghasilkan listrik stabil #kaliajatau" }, recent);
+    assert.ok(match);
+    assert.equal(match.field, "instagramCaption");
+  });
 });
 
 describe("Cerpenek story titles", () => {

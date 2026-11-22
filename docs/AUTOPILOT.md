@@ -1,4 +1,4 @@
-# Autopilot: 3D explainer Short → YouTube + TikTok
+# Autopilot: 3D explainer Short → YouTube + TikTok + Instagram Reels
 
 (Ada juga varian otomatis penuh via GitHub Actions — 6×/hari — lihat `ops/README.md`. Runbook ini berlaku untuk keduanya.)
 
@@ -11,7 +11,7 @@ Dibaca oleh scheduled task (Sen/Rab/Jum) dan oleh CI `video-run` (cron harian ×
 | | |
 |---|---|
 | Repo | `hendra/yt-video-short-generator` (branch `main`) |
-| Channel | YouTube **Kali Aja Tau** `6aedb753e29c69a171803f6e` · TikTok **kaliajatau01** `6aedb7fee29c69a171804662` |
+| Channel | YouTube **Kali Aja Tau** `6aedb753e29c69a171803f6e` · TikTok **kaliajatau01** `6aedb7fee29c69a171804662` · Instagram **Kali Aja Tau** `6aed5544e29c69a1717ba62e` |
 | Buffer org | `6aed53e7ec5c7c6d73f3e437` |
 | Cloudinary | cloud `opqimovw`, folder `shorts/YYYY-MM-DD/<slug>` (resource type **video**) |
 | Publish | Ikuti **`docs/PUBLISHING.md`** (upload → Buffer GraphQL → poll). Env keys wajib: `BUFFER_ACCESS_TOKEN` (scope posts:read + posts:write; tidak bisa list channels), `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — kalau .env tidak punya ini, video tidak bisa di-upload/post |
@@ -139,10 +139,11 @@ Cek: durasi ≈ `timeline.dur`, 1080×1920, ada audio, loudness ≈ −14 LUFS, 
 
 Ringkas jalurnya (detail di file itu, sudah teruji 2026-11-11):
 1. Upload MP4 final ke Cloudinary (signed upload, `shorts/YYYY-MM-DD/<slug>`); cek `bytes` == ukuran file.
-2. Buffer **GraphQL** `createPost` (bukan REST — token di .env hanya berlaku GraphQL): YouTube channel `6aedb753e29c69a171803f6e`, TikTok `6aedb7fee29c69a171804662`. `mode: "shareNow"`, `schedulingType: "automatic"`, `needsApproval: false`.
+2. Buffer **GraphQL** `createPost` (bukan REST — token di .env hanya berlaku GraphQL): YouTube channel `6aedb753e29c69a171803f6e`, TikTok `6aedb7fee29c69a171804662`, Instagram `6aed5544e29c69a1717ba62e`. `mode: "shareNow"` (atau `customScheduled` via `npm run publish`), `schedulingType: "automatic"`, `needsApproval: false`.
 3. `metadata.youtube`: `title` ≤ 100 karakter (tanpa `| 11.ai` untuk VO Gemini; **diakhiri** `| 11.ai` untuk VO ElevenLabs-Free), `categoryId: "27"`, `privacy: "public"`, `madeForKids: false`, `isAiGenerated: true`, `notifySubscribers: true`. `text` = deskripsi: ringkasan 2–3 kalimat, CTA, `Sumber: …`, "Animasi bersifat ilustrasi. Suara: AI (Google AI Studio)", hashtag (`#shorts` + 5–6 topik).
 4. `metadata.tiktok`: `{isAiGenerated: true, title: "<hook singkat>"}`. Caption: hook + CTA + sumber + `Suara: AI (Google AI Studio)` + hashtag sama.
-5. Verifikasi: `post(input: { id: … })` sampai `status == "sent"` (argumen `input`, bukan `id` langsung — detail di PUBLISHING.md). TikTok bisa beberapa menit. `error` → laporkan, jangan retry buta.
+5. `metadata.instagram`: `{type: "reel", shouldShareToFeed: true, isAiGenerated: true}`. Field `instagramCaption` di `publish.json` (≤ 2.200 karakter): baris 1 hook pendek penarik klik `"... more"` (≤ 90 karakter), ringkasan dengan keyword pencarian IG, 1 CTA spesifik Save/Share/pertanyaan komentar topik (bukan spam follow/like), `Sumber: …`, `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).`, dan 3–5 hashtag niche relevan (mis. `#kaliajatau #sainsindonesia`) — **dilarang** `#shorts`, `#short`, atau `#fyp`.
+6. Verifikasi: `post(input: { id: … })` sampai `status == "sent"` (argumen `input`, bukan `id` langsung — detail di PUBLISHING.md). TikTok bisa beberapa menit. `error` → laporkan, jangan retry buta.
 
 Jika ada keraguan kualitas/fakta tapi video lengkap → `saveToDraft: true` dan laporkan; jika tidak lengkap → jangan posting.
 

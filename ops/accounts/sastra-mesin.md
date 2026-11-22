@@ -120,6 +120,7 @@ Di `index.ts`, pakai `music: { src: "<slug>/music.wav", volume: 0.25 }`.
   "description": "…",
   "tiktokTitle": "…",
   "tiktokCaption": "…",
+  "instagramCaption": "…",
   "catatan": "format: <id>; …"
 }
 ```
@@ -127,7 +128,8 @@ Di `index.ts`, pakai `music: { src: "<slug>/music.wav", volume: 0.25 }`.
 - `account` wajib `"sastra-mesin"`.
 - `title` ≤ 100 karakter, tanpa `<` dan `>`, jelas menyebut bendanya tanpa clickbait berlebihan.
 - `description`: 2 kalimat penjelasan singkat + `Sumber: <URL sumber yang dibaca>` + `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).` + `#shorts` + 4–6 hashtag relevan (mis. `#sastramesin #carakerja #teknologi`).
-- `tiktokTitle` ≤ 90 karakter, `tiktokCaption` mengikuti `description` + `Suara: AI (Google AI Studio).` (caption ini juga dipakai otomatis untuk Instagram Reels Sastra Mesin, maks 2.200 karakter).
+- `tiktokTitle` ≤ 90 karakter, `tiktokCaption` mengikuti `description` + `Suara: AI (Google AI Studio).`
+- `instagramCaption` ≤ 2.200 karakter (wajib untuk Instagram Reels, lolos gate CI): baris 1 hook penasaran penarik klik `"... more"` (≤ 90 karakter), diikuti ringkasan dengan keyword nama benda untuk pencarian IG, 1 CTA spesifik Save/Share/pertanyaan komentar (mis. *"Simpan Reels ini atau kirim ke teman yang sering pakai benda ini."*), `Sumber: <URL sumber yang dibaca>`, `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).`, dan 3–5 hashtag relevan (mis. `#sastramesin #carakerja #edukasisains`) — **dilarang** `#shorts`, `#short`, atau `#fyp`.
 - `catatan` diawali `format: <id>;` dari `pick-format`.
 
 ## Refill backlog

@@ -8,6 +8,7 @@ import {
   brandProblems,
   cerpenekMusicProblems,
   envLines,
+  instagramCaptionProblems,
   loopTailProblem,
   resolveAccountArg,
   sastraMesinVideoProblems,
@@ -183,6 +184,31 @@ describe("aiLabsVideoProblems", () => {
     assert.ok(problems.some((p) => p.includes("Prompt siap copy:")), problems.join("; "));
   });
 
+  test('rejects PromptCard when instagramCaption is a string lacking "Prompt siap copy:"', () => {
+    const problems = aiLabsVideoProblems({
+      indexSource: 'export const VIDEO = { mode: "motion", captions: false };',
+      shotsSource: 'export const shots = () => <PromptCard prompt="Act as..." />;',
+      hasWorldFile: false,
+      publishJson: { description: 'Prompt siap copy:\n"Act as..."', instagramCaption: "Save buat nanti #ailabs" },
+    });
+    assert.ok(problems.some((p) => p.includes("instagramCaption") && p.includes("Prompt siap copy:")), problems.join("; "));
+  });
+
+  test('accepts PromptCard when both description and instagramCaption include "Prompt siap copy:"', () => {
+    assert.deepEqual(
+      aiLabsVideoProblems({
+        indexSource: 'export const VIDEO = { mode: "motion", captions: false };',
+        shotsSource: 'export const shots = () => <PromptCard prompt="Act as..." />;',
+        hasWorldFile: false,
+        publishJson: {
+          description: 'Prompt siap copy:\n"Act as..."',
+          instagramCaption: 'Hook IG.\n\nPrompt siap copy:\n"Act as..."\n\n#ailabs',
+        },
+      }),
+      [],
+    );
+  });
+
   test("accepts PromptCard without any deskripsi mention when description has Prompt siap copy", () => {
     assert.deepEqual(
       aiLabsVideoProblems({
@@ -296,6 +322,38 @@ describe("sastraMesinVideoProblems", () => {
     assert.equal(sastraMesinVideoProblems({ indexSource: `// theme: "blueprint"`, hasWorldFile: true }).length, 1);
     assert.ok(sastraMesinVideoProblems({ indexSource: `${ok} mode: "motion"`, hasWorldFile: true }).length >= 1);
     assert.equal(sastraMesinVideoProblems({ indexSource: ok, hasWorldFile: false }).length, 1);
+  });
+});
+
+describe("instagramCaptionProblems", () => {
+  test("skips accounts without Instagram (cerpenek)", () => {
+    assert.deepEqual(instagramCaptionProblems({}, ACCOUNTS.cerpenek), []);
+  });
+
+  test("requires non-empty instagramCaption for IG-enabled accounts", () => {
+    for (const acc of [kaliAja, aiLabs, ACCOUNTS["sastra-mesin"]]) {
+      assert.ok(instagramCaptionProblems({}, acc).some((p) => p.includes("instagramCaption")), acc.id);
+      assert.ok(instagramCaptionProblems({ instagramCaption: "   " }, acc).some((p) => p.includes("instagramCaption")), acc.id);
+    }
+  });
+
+  test("rejects captions over 2200 chars or containing #shorts / #short / #fyp", () => {
+    assert.ok(instagramCaptionProblems({ instagramCaption: "a".repeat(2201) }, kaliAja).some((p) => p.includes("2200")));
+    for (const tag of ["#shorts", "#Short", "#FYP"]) {
+      assert.ok(
+        instagramCaptionProblems({ instagramCaption: `Hook menarik\n\n${tag} #sains` }, aiLabs).some((p) => p.includes("#shorts")),
+        `expected rejection for ${tag}`,
+      );
+    }
+  });
+
+  test("accepts clean instagramCaption <= 2200 chars including prefix-sharing hashtags like #shortcuts", () => {
+    for (const acc of [kaliAja, aiLabs, ACCOUNTS["sastra-mesin"]]) {
+      assert.deepEqual(
+        instagramCaptionProblems({ instagramCaption: "Hook singkat.\n\nSimpan buat nanti! #shortcuts #sains" }, acc),
+        [],
+      );
+    }
   });
 });
 
