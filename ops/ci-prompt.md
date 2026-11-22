@@ -16,13 +16,14 @@ Your task: produce a **complete new vertical 3D explainer Short** end-to-end, EX
   3. For 3D channels (`kali-aja`, `cerpenek`, `sastra-mesin`): `src/videos/<slug>/state.ts`, `world.ts`, `shots.ts`, `index.ts`. For `mode: "motion"` (`ai-labs`): `src/videos/<slug>/shots.tsx` and `index.ts` (without `world.ts` or `state.ts`).
   4. `src/videos/<slug>/timeline.json` (via `npm run timeline -- <slug>`)
   5. `src/videos/<slug>/alignment.json` (via `npm run tts -- <slug>`)
-  6. `src/videos/<slug>/publish.json` — **exactly this shape**:
-     `{ "account": "<account-id>", "title": "...", "description": "...", "tiktokTitle": "...", "tiktokCaption": "...", "catatan": "..." }`
+  6. `src/videos/<slug>/publish.json` — **exactly this shape** (omit `instagramCaption` only on accounts without Instagram, i.e. `cerpenek`):
+     `{ "account": "<account-id>", "title": "...", "description": "...", "tiktokTitle": "...", "tiktokCaption": "...", "instagramCaption": "...", "catatan": "..." }`
      - `account` **must equal the account id of this run** (the workflow refuses to publish a mismatch)
      - `title` ≤ 100 chars
      - `description` (YouTube): ringkasan 2–3 kalimat + `Sumber: …` + `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).` + hashtag (`#shorts` + 5–6 topik)
      - No `<` or `>` in `title` or `description` (YouTube rejects them) — write "lebih dari" / "kurang dari"
      - `tiktokTitle` ≤ 90 chars (hook only), `tiktokCaption` like description + `Suara: AI (Google AI Studio)`
+     - `instagramCaption` (wajib untuk `kali-aja`, `ai-labs`, `sastra-mesin`; ≤ 2.200 chars): baris 1 hook pendek penarik klik `"... more"` (≤ 90 karakter), diikuti ringkasan dengan keyword pencarian IG, 1 CTA spesifik Save/Share/pertanyaan komentar (bukan follow/like), `Sumber: …`, `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).`, dan 3–5 hashtag niche relevan — **dilarang** `#shorts`, `#short`, atau `#fyp`
      - `catatan`: start with `format: <id>;` from `pick-format`, followed by one short line (kept in the VM-local publish log only; not committed anywhere)
 - Do NOT render or upload or post anything. Do NOT `git push` — CI commits nothing from publishing; your source stays in the VM and is discarded when the job ends.
 - Run checks before stopping: `npm run timeline -- <slug>`, `npm run check-sync -- <slug>`, `npm run check-motion -- <slug>`, `npm run lint`, `npm test`.
