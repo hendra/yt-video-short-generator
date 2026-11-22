@@ -82,7 +82,7 @@ export const ACCOUNTS: Record<AccountId, Account> = {
     brand: { prefix: "Cerpe", accent: "nek" },
     buffer: {
       orgId: "6af9a85ef0ed12641d69eab4",
-      youtubeChannelId: "6af9a8caece6dfde5fd19e00",
+      youtubeChannelId: "6b027a7c8541f09ecb5eade1",
       tiktokChannelId: "6af9a8e0ece6dfde5fd19e93",
     },
     youtubeCategoryId: "27",
