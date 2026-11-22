@@ -5,7 +5,7 @@ compatibility_date = "2026-11-11"
 # Satu dispatch per akun per tick. Akun baru hanya masuk daftar ini setelah ID Buffer di src/accounts.ts
 # dan GitHub Environment-nya terisi (lihat docs/PUBLISHING.md § Channel IDs).
 [vars]
-ACCOUNTS = "kali-aja,ai-labs,cerpenek,sastra-mesin"
+ACCOUNTS = "kali-aja,ai-labs,cerpenek,sastra-mesin,upwayyy"
 
 [triggers]
 # 05:30, 10:30, 17:30 WIB — satu run per slot (pagi/siang/malam); publish menjadwalkan jam tayang per platform.
