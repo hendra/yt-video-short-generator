@@ -120,10 +120,11 @@ Di `index.ts`, pakai `music: { src: "<slug>/music.wav", volume: 0.14 }`.
 ```
 
 - `account` wajib `"mandor-bangunan"`.
+- Saat ini `mandor-bangunan` tayang di **TikTok saja** (`youtubeChannelId` & `instagramChannelId` belum disambungkan). Field `title` dan `description` tetap wajib diisi di `publish.json` untuk pengecekan duplikat dan log hasil publish; `instagramCaption` bersifat **opsional** selama `instagramChannelId` belum diisi di `src/accounts.ts`.
 - `title` ≤ 100 karakter, tanpa `<` dan `>`, jelas menyebut struktur/proyeknya.
-- `description` (YouTube): ringkasan 2–3 kalimat + `Sumber: <URL sumber yang dibaca>` + `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).` + `#shorts` + 5–6 hashtag konstruksi (mis. `#tekniksipil #konstruksi #arsitektur`).
+- `description`: ringkasan 2–3 kalimat + `Sumber: <URL sumber yang dibaca>` + `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).` + `#shorts` + 5–6 hashtag konstruksi (mis. `#tekniksipil #konstruksi #arsitektur`).
 - `tiktokTitle` ≤ 90 karakter (hook singkat), `tiktokCaption` mengikuti deskripsi + `Suara: AI (Google AI Studio).`
-- `instagramCaption` ≤ 2.200 karakter (wajib untuk Instagram Reels, lolos gate CI): baris 1 hook pendek penarik klik `"... more"` (≤ 90 karakter), ringkasan dengan keyword konstruksi untuk pencarian IG, 1 CTA spesifik Save/Share/pertanyaan komentar (bukan spam follow/like), `Sumber: <URL sumber yang dibaca>`, `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).`, dan 3–5 hashtag relevan (mis. `#mandorbangunan #tekniksipil #konstruksi`) — **dilarang** `#shorts`, `#short`, atau `#fyp`.
+- `instagramCaption` (opsional sampai Instagram terhubung, wajib jika `instagramChannelId` diisi; ≤ 2.200 karakter): baris 1 hook pendek penarik klik `"... more"` (≤ 90 karakter), ringkasan dengan keyword konstruksi untuk pencarian IG, 1 CTA spesifik Save/Share/pertanyaan komentar (bukan spam follow/like), `Sumber: <URL sumber yang dibaca>`, `Animasi bersifat ilustrasi. Suara: AI (Google AI Studio).`, dan 3–5 hashtag relevan (mis. `#mandorbangunan #tekniksipil #konstruksi`) — **dilarang** `#shorts`, `#short`, atau `#fyp`.
 - `catatan` diawali `format: <id>;` dari `pick-format`.
 
 ## Refill backlog

@@ -60,14 +60,14 @@ Channel keempat `sastra-mesin` (cara kerja benda sehari-hari, tema 3D `blueprint
 4. Uji lewat `gh workflow run video-run --ref main -f account=upwayyy -f dry_run=true` sampai satu video utuh keluar. `npm run footage` butuh `ffmpeg` — sudah dipasang preflight CI.
 5. **Baru setelah itu** tambahkan `upwayyy` ke `ACCOUNTS` di `ops/cloudflare-cron/wrangler.toml` lalu deploy worker. Sebelum itu channel ini hanya jalan manual.
 
-### Channel keenam `mandor-bangunan` — belum aktif, belum di cron
+### Channel keenam `mandor-bangunan` — TikTok-only, masuk cron
 
-`mandor-bangunan` (konstruksi, gedung, jembatan, infrastruktur, dan proyek teknik sipil; gaya naskah, animasi 3D `cream`, dan suara `id-id-podcaster-1` disamakan dengan `kali-aja`) sudah terdaftar di `src/accounts.ts` + `video.yml` dengan ID Buffer `TODO_` (YouTube, TikTok, dan Instagram Reels). Karena itu resolve akun gagal sampai siap. Urutan setup:
+`mandor-bangunan` (konstruksi, gedung, jembatan, infrastruktur, dan proyek teknik sipil; gaya naskah, animasi 3D `cream`, dan suara `id-id-podcaster-1` disamakan dengan `kali-aja`) sudah terkonfigurasi di `src/accounts.ts` untuk **TikTok saja** (`orgId: 6b02ca2707e3daab8001434d`, `tiktokChannelId: 6b02cab28541f09ecb623894`) dan sudah masuk `ACCOUNTS` di `ops/cloudflare-cron/wrangler.toml`. Prasyarat sebelum tick cron berikutnya:
 
-1. Sambungkan YouTube, TikTok, dan Instagram Reels Mandor Bangunan ke Buffer, ambil org id + ketiga channel id, isi `buffer` di `src/accounts.ts` (ganti semua `TODO_`).
-2. Buat GitHub Environment `mandor-bangunan`, isi secret Buffer/Cloudinary/`GEMINI_API_KEY` untuk channel ini (repo secrets tetap jadi fallback).
-3. Uji lewat `gh workflow run video-run --ref main -f account=mandor-bangunan -f dry_run=true` sampai satu video utuh keluar.
-4. **Baru setelah itu** tambahkan `mandor-bangunan` ke `ACCOUNTS` di `ops/cloudflare-cron/wrangler.toml` lalu deploy worker (`npx wrangler deploy --config ops/cloudflare-cron/wrangler.toml`). Sebelum itu channel ini belum masuk cron.
+1. Buat GitHub Environment `mandor-bangunan` dan isi `BUFFER_ACCESS_TOKEN` khusus org ini (secret Cloudinary/Gemini/Slack fallback ke repo secret jika tidak diset).
+2. Deploy ulang worker (`npx wrangler deploy --config ops/cloudflare-cron/wrangler.toml`).
+3. Uji opsional via `gh workflow run video-run --ref main -f account=mandor-bangunan -f dry_run=true`.
+4. Ketika YouTube / Instagram Reels siap nanti, cukup tambahkan `youtubeChannelId` / `instagramChannelId` di `src/accounts.ts`.
 
 ⚠️ Dispatch manual **tanpa `dry_run` adalah live run** — video akan benar-benar diposting ke YouTube + TikTok. Untuk rehearsal, pakai `-f dry_run=true` (lihat bawah). Video untuk `account=ai-labs` butuh isi `accounts.ts` (ID Buffer AI Labs — sudah terisi) dan environment `ai-labs` (sudah terpasang).
 
