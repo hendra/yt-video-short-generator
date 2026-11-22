@@ -1,11 +1,10 @@
 /**
  * Publish a finished video to YouTube + TikTok (+ Instagram) via Cloudinary (signed upload) and Buffer (GraphQL).
- *   npm run publish -- <slug> [--account <id>] [--slot <pagi|siang|malam> --date <YYYY-MM-DD>]
+ *   npm run publish -- <slug> [--account <id>] [--slot <siang|malam> --date <YYYY-MM-DD>]
  *
  * Posts are scheduled (Buffer customScheduled) at the slot's WIB air time per platform (SLOT_TIMES in
- * publish-lib.mts); the pagi slot has no YouTube post (Buffer free allows 2 YouTube posts/day). CI fixes
- * the slot at run start and passes --slot/--date; without them the slot for "now" is used. An air time
- * that already passed is shared now instead.
+ * publish-lib.mts: 12:00 and 19:00 WIB). CI fixes the slot at run start and passes --slot/--date; without
+ * them the slot for "now" is used. An air time that already passed is shared now instead.
  *
  * Requirements:
  *   - out/<slug>-final.mp4 must exist (run render + loudnorm first)
@@ -44,7 +43,7 @@ for (let i = 0; i < args.length; i += 1) {
   else if (a === "--date") { dateArg = args[i + 1]; i += 1; }
   else if (!a.startsWith("--")) slug = a;
 }
-if (!slug) { console.error("Usage: npm run publish -- <slug> [--account <id>] [--slot <pagi|siang|malam> --date <YYYY-MM-DD>]"); process.exit(1); }
+if (!slug) { console.error("Usage: npm run publish -- <slug> [--account <id>] [--slot <siang|malam> --date <YYYY-MM-DD>]"); process.exit(1); }
 
 const fail = (msg: string): never => { console.error(msg); process.exit(1); };
 const today = () => new Date().toISOString().slice(0, 10);
@@ -73,16 +72,9 @@ if (!isConfigured(account)) {
   fail(`publish refused: akun ${account.id} belum dikonfigurasi (missing: ${missingConfigFields(account).join(", ")}) — refusing before upload`);
 }
 
-const slotRes = resolveSlot(slotArg, dateArg, new Date(), account.id);
+const slotRes = resolveSlot(slotArg, dateArg, new Date());
 if (typeof slotRes === "string") fail(slotRes);
 const { slot, date: slotDate } = slotRes as Exclude<typeof slotRes, string>;
-if (
-  !dueAt(slot, slotDate, "youtube", account.id) &&
-  !dueAt(slot, slotDate, "tiktok", account.id) &&
-  !(account.buffer.instagramChannelId && dueAt(slot, slotDate, "instagram", account.id))
-) {
-  fail(`publish refused: slot "${slot}" tidak punya jadwal tayang untuk akun ${account.id}`);
-}
 
 const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME, CLOUD_KEY = process.env.CLOUDINARY_API_KEY, CLOUD_SECRET = process.env.CLOUDINARY_API_SECRET;
 const BUFFER = process.env.BUFFER_ACCESS_TOKEN;
@@ -150,30 +142,27 @@ const bufferPost = async (input: Record<string, unknown>) => {
 };
 
 const now = new Date();
-const timingFor = (p: Platform): PostTiming | null => {
-  const due = dueAt(slot, slotDate, p, account.id);
-  return due ? postTiming(due, now) : null;
-};
+const timingFor = (p: Platform): PostTiming => postTiming(dueAt(slot, slotDate, p), now);
 const ytTiming = timingFor("youtube"), ttTiming = timingFor("tiktok"), igTiming = IG ? timingFor("instagram") : null;
 const describeTiming = (t: PostTiming | null) => (t === null ? "skip" : t.mode === "shareNow" ? "now" : t.dueAt);
 console.log(`slot=${slot} date=${slotDate} youtube=${describeTiming(ytTiming)} tiktok=${describeTiming(ttTiming)}${IG ? ` instagram=${describeTiming(igTiming)}` : ""}`);
 
-const ytInput = ytTiming && {
+const ytInput = {
   channelId: YT, ...ytTiming, schedulingType: "automatic", needsApproval: false,
   text: youtubeSafe(PUB.description),
   assets: [{ video: { url: up.secure_url! } }],
   metadata: { youtube: youtubeMetadata(account, PUB.title) },
 };
-const ttInput = ttTiming && {
+const ttInput = {
   channelId: TT, ...ttTiming, schedulingType: "automatic", needsApproval: false,
   text: PUB.tiktokCaption,
   assets: [{ video: { url: up.secure_url! } }],
   metadata: { tiktok: { isAiGenerated: true, title: PUB.tiktokTitle } },
 };
-const yt = ytInput ? await bufferPost(ytInput) : null;
-if (yt) console.log(`youtube: ${yt.id} status=${yt.status} ${yt.externalLink ?? ""}`);
-const tt = ttInput ? await bufferPost(ttInput) : null;
-if (tt) console.log(`tiktok:  ${tt.id} status=${tt.status} ${tt.externalLink ?? ""}`);
+const yt = await bufferPost(ytInput);
+console.log(`youtube: ${yt.id} status=${yt.status} ${yt.externalLink ?? ""}`);
+const tt = await bufferPost(ttInput);
+console.log(`tiktok:  ${tt.id} status=${tt.status} ${tt.externalLink ?? ""}`);
 const ig = IG && igTiming ? await bufferPost(instagramInput(IG, up.secure_url!, instagramCaptionFor(PUB), igTiming)) : null;
 if (ig) console.log(`instagram: ${ig.id} status=${ig.status} ${ig.externalLink ?? ""}`);
 
