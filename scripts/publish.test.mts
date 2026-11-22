@@ -6,11 +6,13 @@ import {
   bufferPostsFilter,
   cloudinarySign,
   extractBufferError,
+  instagramCaptionFor,
   instagramInput,
   dueAt,
   isSlot,
   mapBufferPostNode,
   postTiming,
+  sanitizeInstagramCaption,
   settleAction,
   resolveSlot,
   slotFor,
@@ -54,7 +56,9 @@ describe("validatePublishJson", () => {
     assert.ok(validatePublishJson({ ...ok, tiktokTitle: "x".repeat(91) }).join().includes("tiktokTitle > 90"));
     assert.ok(validatePublishJson({ ...ok, description: "x".repeat(5001) }).join().includes("description > 5000"));
     assert.ok(validatePublishJson({ ...ok, tiktokCaption: "x".repeat(2201) }).join().includes("tiktokCaption > 2200"));
-    assert.deepEqual(validatePublishJson({ ...ok, description: "x".repeat(5000), tiktokCaption: "x".repeat(2200) }), []);
+    assert.ok(validatePublishJson({ ...ok, instagramCaption: "   " }).join().includes("instagramCaption"));
+    assert.ok(validatePublishJson({ ...ok, instagramCaption: "x".repeat(2201) }).join().includes("instagramCaption > 2200"));
+    assert.deepEqual(validatePublishJson({ ...ok, description: "x".repeat(5000), tiktokCaption: "x".repeat(2200), instagramCaption: "Hook\n\n#kaliajatau" }), []);
   });
   test("description cap counts UTF-8 bytes of the text YouTube receives", () => {
     assert.ok(validatePublishJson({ ...ok, description: "é".repeat(2501) }).join().includes("description > 5000"));
@@ -129,6 +133,35 @@ describe("instagramInput", () => {
   });
 });
 
+describe("sanitizeInstagramCaption and instagramCaptionFor", () => {
+  test("strips cross-platform tags without touching valid prefix-sharing hashtags", () => {
+    assert.equal(
+      sanitizeInstagramCaption("Hook seru!\n\n#Shorts #short #YouTubeShorts #FYP #foryou #ForYouPage #tiktok #shortcuts #fyppemula #kaliajatau #ailabs"),
+      "Hook seru!\n\n#shortcuts #fyppemula #kaliajatau #ailabs",
+    );
+  });
+
+  test("collapses redundant spaces/newlines and caps length at 2200 chars", () => {
+    assert.equal(sanitizeInstagramCaption("Baris 1  #shorts   akhir\n\n\n\n#fyp\n\n#sains  "), "Baris 1 akhir\n\n#sains");
+    assert.equal(sanitizeInstagramCaption("a".repeat(2250)).length, 2200);
+  });
+
+  test("instagramCaptionFor uses instagramCaption when present and falls back to sanitized tiktokCaption", () => {
+    assert.equal(
+      instagramCaptionFor({ tiktokCaption: "Info #shorts #fyp #sains", instagramCaption: "Hook IG\n#sains" }),
+      "Hook IG\n#sains",
+    );
+    assert.equal(
+      instagramCaptionFor({ tiktokCaption: "Info #shorts #fyp #sains", instagramCaption: "   " }),
+      "Info #sains",
+    );
+    assert.equal(
+      instagramCaptionFor({ tiktokCaption: "Info #shorts #sains" }),
+      "Info #sains",
+    );
+  });
+});
+
 describe("slot scheduling", () => {
   test("slotFor picks the slot by WIB time, including the cron runs", () => {
     assert.deepEqual(slotFor(new Date("2026-11-20T22:30:00Z")), { slot: "pagi", date: "2026-11-21" }); // 05:30 WIB
@@ -156,7 +189,9 @@ describe("slot scheduling", () => {
 
 describe("bufferChannelIds and mapBufferPostNode", () => {
   test("includes instagramChannelId only when configured", () => {
-    assert.equal(bufferChannelIds(ACCOUNTS["kali-aja"].buffer).length, 2);
+    assert.equal(bufferChannelIds(ACCOUNTS.cerpenek.buffer).length, 2);
+    assert.equal(bufferChannelIds(ACCOUNTS["kali-aja"].buffer).length, 3);
+    assert.equal(bufferChannelIds(ACCOUNTS["ai-labs"].buffer).length, 3);
     assert.deepEqual(bufferChannelIds(ACCOUNTS["sastra-mesin"].buffer), [
       "6afdf52fece6dfde5f101631",
       "6afdf54bece6dfde5f101af0",
