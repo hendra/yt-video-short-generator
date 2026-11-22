@@ -84,12 +84,25 @@ const UPWAYYY: Format[] = [
   { id: "character-story", weight: 1, name: "Character Story", instruction: "personal gamer aside on the hook (why this one character stuck); short spoiler warning; tell their arc from first appearance to their fate; one honest aside reaction mid-video; end on a loop line back to the hook. Facts only from the sources, theories labelled." },
 ];
 
+// Mandor Bangunan: construction, buildings, bridges, foundations & civil engineering explainers on Kali Aja's
+// 4-beat retention arc (hook -> context + re-hook -> twist + re-hook -> loop ending back to line 01).
+const MANDOR_BANGUNAN: Format[] = [
+  { id: "bedah-struktur", weight: 3, name: "Bedah Struktur", instruction: "authority/number hook on an extreme structure; 1–3 load-bearing or engineering mechanism steps; one everyday analogy; end on a loop line connecting grammatically back to line 01." },
+  { id: "cara-bangun", weight: 3, name: "Cara Bangun", instruction: "open on an impossible-looking construction feat; walk through how engineers actually build or install it on site step-by-step; reveal the key engineering constraint; end on a loop line back to line 01." },
+  { id: "mitos-konstruksi", weight: 2, name: "Mitos Konstruksi", instruction: "open with a common misconception about buildings, bridges or materials; show what structural evidence reveals; explain why the physics works differently; end on a loop line back to line 01." },
+  { id: "misteri-teknik", weight: 2, name: "Misteri Teknik", instruction: "open with a counter-intuitive engineering fact (e.g. why skyscrapers sway or caissons stay dry); reveal structural clues in order; land the mechanism reveal; end on a loop line back to line 01." },
+  { id: "sebelum-sesudah", weight: 2, name: "Sebelum → Sesudah", instruction: "start with the viewer's default intuition about a structure; flip it with real site/stress evidence; show the internal mechanism; end with a loop line connecting back to line 01." },
+  { id: "tantangan-lapangan", weight: 1, name: "Tantangan Lapangan", instruction: "name a concrete geotechnical or site problem (soft soil, deep water, wind, quake); show the engineered solution and its quantified limit; end on a loop line back to line 01." },
+  { id: "duel-material", weight: 1, name: "Duel Material / Metode", instruction: "ask why engineers pick one construction method or material over the tempting alternative; dismiss the wrong intuition briefly; show why the chosen method holds under load; end on a loop line back to line 01." },
+];
+
 export const FORMATS_BY_ACCOUNT: Record<AccountId, Format[]> = {
   "kali-aja": KALI_AJA,
   "ai-labs": AI_LABS,
   cerpenek: CERPENEK,
   "sastra-mesin": SASTRA_MESIN,
   upwayyy: UPWAYYY,
+  "mandor-bangunan": MANDOR_BANGUNAN,
 };
 
 export const formatsFor = (accountId: AccountId | string = DEFAULT_ACCOUNT): Format[] => {

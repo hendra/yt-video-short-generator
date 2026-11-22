@@ -103,3 +103,21 @@ describe("Sastra Mesin pool", () => {
     for (const f of formatsFor("sastra-mesin")) assert.match(f.instruction, /CTA/, f.id);
   });
 });
+
+describe("Mandor Bangunan pool", () => {
+  test("has 7 construction formats with loop endings and no CTA", () => {
+    const pool = formatsFor("mandor-bangunan");
+    assert.deepEqual(
+      pool.map((f) => f.id),
+      ["bedah-struktur", "cara-bangun", "mitos-konstruksi", "misteri-teknik", "sebelum-sesudah", "tantangan-lapangan", "duel-material"],
+    );
+    assert.deepEqual(
+      pool.map((f) => f.weight),
+      [3, 3, 2, 2, 2, 1, 1],
+    );
+    for (const f of pool) {
+      assert.match(f.instruction, /loop/, f.id);
+      assert.doesNotMatch(f.instruction, /\bCTA\b/, f.id);
+    }
+  });
+});
