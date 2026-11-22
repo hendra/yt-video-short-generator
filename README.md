@@ -7,7 +7,7 @@ animasi 3D low-poly, voiceover **AI** (Google AI Studio TTS, gratis — lihat `.
 
 **Channel ketiga: Cerpenek** — dongeng anak 5–10 tahun (sejarah, legenda, asal-usul Indonesia) dengan suara wanita dan diorama mainan kayu; tayang otomatis di slot cron yang sama (lihat `docs/PUBLISHING.md`).
 
-**Empat channel, satu pipeline.** Empat brand tayang otomatis di slot cron yang sama (2×/hari: run 09:00/16:00 WIB, tayang terjadwal jam 12:00 & 19:00 WIB untuk semua platform), masing-masing sekali run per akun: **Kali Aja Tau** (sains & teknik Indonesia), **AI Labs** (tips & trik Claude/ChatGPT/Gemini/OpenCode), **Cerpenek** (dongeng anak), dan **Sastra Mesin** (cara kerja benda sehari-hari, tema 3D `blueprint`, suara `id-id-tutor-1`). Konfigurasi akun ada di `src/accounts.ts`; kredensial terpisah lewat GitHub Environments (`kali-aja` / `ai-labs` / `cerpenek` / `sastra-mesin`) — detail & fallback di `docs/PUBLISHING.md` dan `ops/README.md`.
+**Multi-channel, satu pipeline.** Brand yang aktif tayang otomatis di slot cron yang sama (2×/hari: run 09:00/16:00 WIB, tayang terjadwal jam 12:00 & 19:00 WIB untuk semua platform), masing-masing sekali run per akun: **Kali Aja Tau** (sains & teknik Indonesia), **AI Labs** (tips & trik Claude/ChatGPT/Gemini/OpenCode), **Cerpenek** (dongeng anak), **Sastra Mesin** (cara kerja benda sehari-hari, tema 3D `blueprint`, suara `id-id-tutor-1`), **Upwayyy** (lore game horor, `mode: "footage"`), dan **Mandor Bangunan** (konstruksi, gedung, jembatan & teknik sipil — gaya 3D `cream` & suara `id-id-podcaster-1` sama dengan Kali Aja, saat ini tayang di TikTok). Konfigurasi akun ada di `src/accounts.ts`; kredensial terpisah lewat GitHub Environments — detail & fallback di `docs/PUBLISHING.md` dan `ops/README.md`.
 
 Repo ini adalah **pipeline** — video generated tidak tersimpan di git, dan tidak ada katalog video yang di-commit. Duplicate/re-publish lookup diambil dari Buffer di CI ke `/tmp/published-videos-<account>.json` (satu run = satu akun; lihat `src/accounts.ts`); source, VO, dan render output tetap tidak di-commit.
 
@@ -47,7 +47,7 @@ naskah.txt ──► npm run tts      (Google AI Studio TTS, gratis: suara + tim
    npm run align -- <id> path/ke/vo.mp3  # audio sudah ada -> timing per kata (ElevenLabs Forced Alignment)
    npm run align:local -- <id>           # timing gratis & offline (±0,2 detik per kata)
    ```
-   `npm run tts` memakai voice akun (`tts` di `src/accounts.ts`; `--account <id>` atau env `ACCOUNT`, default Kali Aja): pria `id-id-podcaster-1` untuk Kali Aja dan AI Labs, wanita muda `id-id-storyteller-1` untuk Cerpenek, wanita `id-id-tutor-1` untuk Sastra Mesin. Tidak ada pengganti voice lain.
+   `npm run tts` memakai voice akun (`tts` di `src/accounts.ts`; `--account <id>` atau env `ACCOUNT`, default Kali Aja): pria `id-id-podcaster-1` untuk Kali Aja, AI Labs, Upwayyy, dan Mandor Bangunan, wanita muda `id-id-storyteller-1` untuk Cerpenek, wanita `id-id-tutor-1` untuk Sastra Mesin. Tidak ada pengganti voice lain.
 4. `npm run timeline -- <id>` → caption, timing baris, dan rentang shot.
 5. `npm run music -- <id>` (opsional, kalau durasi berubah) → musik baru sesuai titik potong shot.
 6. `npm run dev` untuk cek, lalu `npm run render -- <id> out/<id>.mp4`.

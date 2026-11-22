@@ -60,6 +60,15 @@ Channel keempat `sastra-mesin` (cara kerja benda sehari-hari, tema 3D `blueprint
 4. Uji lewat `gh workflow run video-run --ref main -f account=upwayyy -f dry_run=true` sampai satu video utuh keluar. `npm run footage` butuh `ffmpeg` — sudah dipasang preflight CI.
 5. **Baru setelah itu** tambahkan `upwayyy` ke `ACCOUNTS` di `ops/cloudflare-cron/wrangler.toml` lalu deploy worker. Sebelum itu channel ini hanya jalan manual.
 
+### Channel keenam `mandor-bangunan` — TikTok-only, masuk cron
+
+`mandor-bangunan` (konstruksi, gedung, jembatan, infrastruktur, dan proyek teknik sipil; gaya naskah, animasi 3D `cream`, dan suara `id-id-podcaster-1` disamakan dengan `kali-aja`) sudah terkonfigurasi di `src/accounts.ts` untuk **TikTok saja** (`orgId: 6b02ca2707e3daab8001434d`, `tiktokChannelId: 6b02cab28541f09ecb623894`) dan sudah masuk `ACCOUNTS` di `ops/cloudflare-cron/wrangler.toml`. Prasyarat sebelum tick cron berikutnya:
+
+1. Buat GitHub Environment `mandor-bangunan` dan isi `BUFFER_ACCESS_TOKEN` khusus org ini (secret Cloudinary/Gemini/Slack fallback ke repo secret jika tidak diset).
+2. Deploy ulang worker (`npx wrangler deploy --config ops/cloudflare-cron/wrangler.toml`).
+3. Uji opsional via `gh workflow run video-run --ref main -f account=mandor-bangunan -f dry_run=true`.
+4. Ketika YouTube / Instagram Reels siap nanti, cukup tambahkan `youtubeChannelId` / `instagramChannelId` di `src/accounts.ts`.
+
 ⚠️ Dispatch manual **tanpa `dry_run` adalah live run** — video akan benar-benar diposting ke YouTube + TikTok. Untuk rehearsal, pakai `-f dry_run=true` (lihat bawah). Video untuk `account=ai-labs` butuh isi `accounts.ts` (ID Buffer AI Labs — sudah terisi) dan environment `ai-labs` (sudah terpasang).
 
 Render+publish video yang **sudah di-commit & push ke main** (mis. video yang kamu bangun sendiri, tanpa agent):
@@ -68,7 +77,7 @@ Render+publish video yang **sudah di-commit & push ke main** (mis. video yang ka
 gh workflow run video-run --ref main -f slug=<slug>
 ```
 
-Prasyarat manual path: video source `src/videos/<slug>/` harus ada di tree (tidak di-commit — generated di CI; untuk manual path kamu tambahkan sendiri sementara, boleh lewat `git add -f`, lalu hapus lagi), `public/<slug>/vo.mp3` ada di tree, dan `src/videos/<slug>/publish.json` harus berisi `"account"` yang sama dengan akun run ini (`kali-aja`, `ai-labs`, `cerpenek`, `sastra-mesin`, atau `upwayyy`) — job `Account gate` menolak kalau tidak cocok dengan akun yang dipakai run ini. Untuk channel footage (`upwayyy`) `public/<slug>/clips/` juga gitignored, jadi jalankan `npm run footage -- <slug> --appid <id>` dulu sebelum render/dispatch manual. Buffer harus berisi publish sebelumnya karena duplicate/re-publish lookup di-fetch dari sana. Jalankan gates lokal dulu (`npm run lint && npm test`). Manual path tetap publish **for real** ke YouTube + TikTok kecuali `dry_run=true`; tidak ada katalog yang di-commit atau di-push.
+Prasyarat manual path: video source `src/videos/<slug>/` harus ada di tree (tidak di-commit — generated di CI; untuk manual path kamu tambahkan sendiri sementara, boleh lewat `git add -f`, lalu hapus lagi), `public/<slug>/vo.mp3` ada di tree, dan `src/videos/<slug>/publish.json` harus berisi `"account"` yang sama dengan akun run ini (`kali-aja`, `ai-labs`, `cerpenek`, `sastra-mesin`, `upwayyy`, atau `mandor-bangunan`) — job `Account gate` menolak kalau tidak cocok dengan akun yang dipakai run ini. Untuk channel footage (`upwayyy`) `public/<slug>/clips/` juga gitignored, jadi jalankan `npm run footage -- <slug> --appid <id>` dulu sebelum render/dispatch manual. Buffer harus berisi publish sebelumnya karena duplicate/re-publish lookup di-fetch dari sana. Jalankan gates lokal dulu (`npm run lint && npm test`). Manual path tetap publish **for real** ke YouTube + TikTok kecuali `dry_run=true`; tidak ada katalog yang di-commit atau di-push.
 
 Dry-run (semua langkah kecuali Publish + laporan sukses; MP4 final disimpan sebagai artifact `final-video` selama 3 hari):
 

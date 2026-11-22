@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ACCOUNTS, accountById, isAccountId } from "../src/accounts.ts";
-import { accountMusicProblems, accountProblems, aiLabsVideoProblems, brandProblems, instagramCaptionProblems, loopTailProblem, sastraMesinVideoProblems, upwayyyVideoProblems } from "./account-core.mts";
+import { accountMusicProblems, accountProblems, aiLabsVideoProblems, brandProblems, instagramCaptionProblems, loopTailProblem, mandorBangunanVideoProblems, sastraMesinVideoProblems, upwayyyVideoProblems } from "./account-core.mts";
 import { ROOT, videoDir } from "./lib.mts";
 
 const args = process.argv.slice(2);
@@ -59,6 +59,10 @@ if (!fs.existsSync(indexPath)) {
 
 if (account.id === "sastra-mesin") {
   problems.push(...sastraMesinVideoProblems({ indexSource, hasWorldFile: fs.existsSync(path.join(dir, "world.ts")) }));
+}
+
+if (account.id === "mandor-bangunan") {
+  problems.push(...mandorBangunanVideoProblems({ indexSource, hasWorldFile: fs.existsSync(path.join(dir, "world.ts")) }));
 }
 
 if (account.id === "ai-labs") {

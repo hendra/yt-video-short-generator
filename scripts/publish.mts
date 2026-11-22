@@ -143,26 +143,40 @@ const bufferPost = async (input: Record<string, unknown>) => {
 
 const now = new Date();
 const timingFor = (p: Platform): PostTiming => postTiming(dueAt(slot, slotDate, p), now);
-const ytTiming = timingFor("youtube"), ttTiming = timingFor("tiktok"), igTiming = IG ? timingFor("instagram") : null;
+const ytTiming = YT ? timingFor("youtube") : null;
+const ttTiming = TT ? timingFor("tiktok") : null;
+const igTiming = IG ? timingFor("instagram") : null;
 const describeTiming = (t: PostTiming | null) => (t === null ? "skip" : t.mode === "shareNow" ? "now" : t.dueAt);
-console.log(`slot=${slot} date=${slotDate} youtube=${describeTiming(ytTiming)} tiktok=${describeTiming(ttTiming)}${IG ? ` instagram=${describeTiming(igTiming)}` : ""}`);
+console.log(
+  `slot=${slot} date=${slotDate} youtube=${describeTiming(ytTiming)} tiktok=${describeTiming(ttTiming)}${IG ? ` instagram=${describeTiming(igTiming)}` : ""}`,
+);
 
-const ytInput = {
-  channelId: YT, ...ytTiming, schedulingType: "automatic", needsApproval: false,
-  text: youtubeSafe(PUB.description),
-  assets: [{ video: { url: up.secure_url! } }],
-  metadata: { youtube: youtubeMetadata(account, PUB.title) },
-};
-const ttInput = {
-  channelId: TT, ...ttTiming, schedulingType: "automatic", needsApproval: false,
-  text: PUB.tiktokCaption,
-  assets: [{ video: { url: up.secure_url! } }],
-  metadata: { tiktok: { isAiGenerated: true, title: PUB.tiktokTitle } },
-};
-const yt = await bufferPost(ytInput);
-console.log(`youtube: ${yt.id} status=${yt.status} ${yt.externalLink ?? ""}`);
-const tt = await bufferPost(ttInput);
-console.log(`tiktok:  ${tt.id} status=${tt.status} ${tt.externalLink ?? ""}`);
+const yt =
+  YT && ytTiming
+    ? await bufferPost({
+        channelId: YT,
+        ...ytTiming,
+        schedulingType: "automatic",
+        needsApproval: false,
+        text: youtubeSafe(PUB.description),
+        assets: [{ video: { url: up.secure_url! } }],
+        metadata: { youtube: youtubeMetadata(account, PUB.title) },
+      })
+    : null;
+if (yt) console.log(`youtube: ${yt.id} status=${yt.status} ${yt.externalLink ?? ""}`);
+const tt =
+  TT && ttTiming
+    ? await bufferPost({
+        channelId: TT,
+        ...ttTiming,
+        schedulingType: "automatic",
+        needsApproval: false,
+        text: PUB.tiktokCaption,
+        assets: [{ video: { url: up.secure_url! } }],
+        metadata: { tiktok: { isAiGenerated: true, title: PUB.tiktokTitle } },
+      })
+    : null;
+if (tt) console.log(`tiktok:  ${tt.id} status=${tt.status} ${tt.externalLink ?? ""}`);
 const ig = IG && igTiming ? await bufferPost(instagramInput(IG, up.secure_url!, instagramCaptionFor(PUB), igTiming)) : null;
 if (ig) console.log(`instagram: ${ig.id} status=${ig.status} ${ig.externalLink ?? ""}`);
 
@@ -200,7 +214,8 @@ const [ytP, ttP, igP] = await Promise.all([settle(yt, ytTiming), settle(tt, ttTi
 const ytLink = ytP?.link ?? null, ttLink = ttP?.link ?? null, igLink = igP?.link ?? null;
 if ([ytP, ttP, igP].some((p) => p && !p.ok)) {
   const fmt = (n: string, p: Settled | null) => (p ? `${n}=${p.status}/${p.link ?? "pending"}` : `${n}=skip`);
-  fail(`post settled with error or timeout (${fmt("yt", ytP)}, ${fmt("tt", ttP)}${IG ? `, ${fmt("ig", igP)}` : ""}) — do NOT retry blindly; check Buffer UI.`);
+  const summary = [YT ? fmt("yt", ytP) : null, TT ? fmt("tt", ttP) : null, IG ? fmt("ig", igP) : null].filter(Boolean).join(", ");
+  fail(`post settled with error or timeout (${summary}) — do NOT retry blindly; check Buffer UI.`);
 }
 const scheduleOf = (t: PostTiming | null) => (t === null ? undefined : t.mode === "shareNow" ? "now" : t.dueAt);
 
@@ -210,8 +225,16 @@ fs.writeFileSync(
   resultPath,
   JSON.stringify({
     slug, account: account.id, date: today(), title: PUB.title, slot, slotDate,
-    schedule: { youtube: scheduleOf(ytTiming), tiktok: scheduleOf(ttTiming), instagram: scheduleOf(igTiming) },
-    links: { youtube: ytLink, tiktok: ttLink, ...(igLink ? { instagram: igLink } : {}) },
+    schedule: {
+      ...(ytTiming ? { youtube: scheduleOf(ytTiming) } : {}),
+      ...(ttTiming ? { tiktok: scheduleOf(ttTiming) } : {}),
+      ...(igTiming ? { instagram: scheduleOf(igTiming) } : {}),
+    },
+    links: {
+      ...(ytLink ? { youtube: ytLink } : {}),
+      ...(ttLink ? { tiktok: ttLink } : {}),
+      ...(igLink ? { instagram: igLink } : {}),
+    },
   }, null, 1),
 );
 console.log(`publish result: wrote ${resultPath}`);

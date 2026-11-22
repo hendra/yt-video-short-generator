@@ -9,7 +9,7 @@
  * Kept free of node imports so it can be imported from scripts and from src alike.
  */
 
-export type AccountId = "kali-aja" | "ai-labs" | "cerpenek" | "sastra-mesin" | "upwayyy";
+export type AccountId = "kali-aja" | "ai-labs" | "cerpenek" | "sastra-mesin" | "upwayyy" | "mandor-bangunan";
 
 export type Account = {
   id: AccountId;
@@ -17,8 +17,8 @@ export type Account = {
   label: string;
   /** Brand overlay shown on every frame (prefix + highlighted accent). */
   brand: { prefix: string; accent: string };
-  /** Buffer org + channels (YouTube, TikTok, optional Instagram) inside it. */
-  buffer: { orgId: string; youtubeChannelId: string; tiktokChannelId: string; instagramChannelId?: string };
+  /** Buffer org + channels (YouTube, TikTok, Instagram) inside it; at least one channel id must be set. */
+  buffer: { orgId: string; youtubeChannelId?: string; tiktokChannelId?: string; instagramChannelId?: string };
   /** YouTube video category id. */
   youtubeCategoryId: string;
   /** YouTube "made for kids" declaration sent with every upload (true disables comments + notifications there). */
@@ -29,7 +29,7 @@ export type Account = {
   agent: { model: string; prompt: string; files: string[] };
 };
 
-export const ACCOUNT_IDS: readonly AccountId[] = ["kali-aja", "ai-labs", "cerpenek", "sastra-mesin", "upwayyy"];
+export const ACCOUNT_IDS: readonly AccountId[] = ["kali-aja", "ai-labs", "cerpenek", "sastra-mesin", "upwayyy", "mandor-bangunan"];
 
 export const DEFAULT_ACCOUNT: AccountId = "kali-aja";
 
@@ -137,6 +137,26 @@ export const ACCOUNTS: Record<AccountId, Account> = {
       files: ["AGENTS.md", "ops/ci-prompt.md", "ops/accounts/upwayyy.md", "ops/topics/upwayyy.md"],
     },
   },
+  // Mandor Bangunan: construction, buildings, bridges, infrastructure & civil engineering explainers on Kali Aja's 3D cream look and voice.
+  // Currently publishing to TikTok only; YouTube and Instagram channels can be added later by filling their IDs here.
+  "mandor-bangunan": {
+    id: "mandor-bangunan",
+    label: "Mandor Bangunan",
+    brand: { prefix: "Mandor ", accent: "Bangunan" },
+    buffer: {
+      orgId: "6b02ca2707e3daab8001434d",
+      tiktokChannelId: "6b02cab28541f09ecb623894",
+    },
+    youtubeCategoryId: "27",
+    madeForKids: false,
+    tts: { voice: "id-id-podcaster-1", style: "natural, warm, conversational" },
+    agent: {
+      model: "opencode/deepseek-v4.1-flash-free",
+      prompt:
+        "You are in CI. Follow AGENTS.md and ops/ci-prompt.md exactly. Follow ops/accounts/mandor-bangunan.md (channel brief) and ops/topics/mandor-bangunan.md (topic backlog) — they are part of your instructions, they override ops/ci-prompt.md where they differ, and docs/AUTOPILOT.md does NOT apply to this channel. Stop before any publish/upload/render step.",
+      files: ["AGENTS.md", "ops/ci-prompt.md", "ops/accounts/mandor-bangunan.md", "ops/topics/mandor-bangunan.md"],
+    },
+  },
 };
 
 export const isAccountId = (v: unknown): v is AccountId => typeof v === "string" && (ACCOUNT_IDS as readonly string[]).includes(v);
@@ -148,16 +168,23 @@ export const accountById = (id?: string | null): Account => {
   return ACCOUNTS[id];
 };
 
-/** Config fields that still hold a TODO_ placeholder, e.g. ["buffer.orgId", "tts.voice"]. */
-export const missingConfigFields = (account: Account): string[] => [
-  ...(["orgId", "youtubeChannelId", "tiktokChannelId", "instagramChannelId"] as const)
-    .filter((field) => {
-      const val = account.buffer[field];
-      return typeof val === "string" && val.startsWith("TODO_");
-    })
-    .map((field) => `buffer.${field}`),
-  ...(account.tts.voice.startsWith("TODO_") ? ["tts.voice"] : []),
-];
+/** Config fields that still hold a TODO_ placeholder, or "buffer.channels" when no publishing channel is configured. */
+export const missingConfigFields = (account: Account): string[] => {
+  const missing = [
+    ...(["orgId", "youtubeChannelId", "tiktokChannelId", "instagramChannelId"] as const)
+      .filter((field) => {
+        const val = account.buffer[field];
+        return typeof val === "string" && val.startsWith("TODO_");
+      })
+      .map((field) => `buffer.${field}`),
+    ...(account.tts.voice.startsWith("TODO_") ? ["tts.voice"] : []),
+  ];
+  const hasChannel = [account.buffer.youtubeChannelId, account.buffer.tiktokChannelId, account.buffer.instagramChannelId].some(
+    (id) => typeof id === "string" && id.trim() !== "",
+  );
+  if (!hasChannel) missing.push("buffer.channels");
+  return missing;
+};
 
 /** True when the account is safe to publish to (no placeholder left). */
 export const isConfigured = (account: Account): boolean => missingConfigFields(account).length === 0;

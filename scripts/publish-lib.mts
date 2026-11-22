@@ -144,12 +144,11 @@ export const instagramInput = (channelId: string, videoUrl: string, caption: str
   metadata: { instagram: { type: "reel", shouldShareToFeed: true, isAiGenerated: true } },
 });
 
-/** Buffer channel IDs belonging to an account (YouTube, TikTok, and optional Instagram). */
-export const bufferChannelIds = (buffer: Account["buffer"]): string[] => [
-  buffer.youtubeChannelId,
-  buffer.tiktokChannelId,
-  ...(buffer.instagramChannelId ? [buffer.instagramChannelId] : []),
-];
+/** Buffer channel IDs belonging to an account (any subset of YouTube, TikTok, Instagram). */
+export const bufferChannelIds = (buffer: Account["buffer"]): string[] =>
+  [buffer.youtubeChannelId, buffer.tiktokChannelId, buffer.instagramChannelId].filter(
+    (id): id is string => typeof id === "string" && id.trim() !== "",
+  );
 
 /** Buffer posts filter for the duplicate lookup: sent plus still-queued posts, so a scheduled video is not made twice. */
 export const bufferPostsFilter = (buffer: Account["buffer"]) => ({ channelIds: bufferChannelIds(buffer), status: ["sent", "scheduled"] });

@@ -201,6 +201,8 @@ describe("bufferChannelIds and mapBufferPostNode", () => {
       "6afdf54bece6dfde5f101af0",
       "6afe07c2ece6dfde5f116be8",
     ]);
+    assert.deepEqual(bufferChannelIds(ACCOUNTS["mandor-bangunan"].buffer), ["6b02cab28541f09ecb623894"]);
+    assert.deepEqual(bufferChannelIds({ orgId: "o", youtubeChannelId: undefined, tiktokChannelId: "tt" }), ["tt"]);
   });
 
   test("maps instagram, tiktok, and youtube nodes and drops incomplete nodes", () => {

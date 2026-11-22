@@ -205,7 +205,7 @@ describe("Sastra Mesin topic backlog", () => {
 // ---------- line-beat choreography requirements
 describe("briefs teach line-beat choreography", () => {
   test("every 3D brief documents beat()/pulse() and the new kit parts", () => {
-    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md"]) {
+    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/mandor-bangunan.md"]) {
       const text = fs.readFileSync(path.join(ROOT, p), "utf8");
       assert.match(text, /beat\(t, L\(/, `${p} must show beat(t, L(n))`);
       assert.match(text, /pulse\(t, L\(/, `${p} must show pulse(t, L(n))`);
@@ -213,6 +213,10 @@ describe("briefs teach line-beat choreography", () => {
     const sm = fs.readFileSync(path.join(ROOT, "ops/accounts/sastra-mesin.md"), "utf8");
     for (const name of ["kit.tube(", "kit.gear(", "kit.flowDots(", "kit.cutaway(", "kit.glowMat("]) {
       assert.ok(sm.includes(name), `sastra-mesin must show ${name}`);
+    }
+    const mb = fs.readFileSync(path.join(ROOT, "ops/accounts/mandor-bangunan.md"), "utf8");
+    for (const name of ["kit.tube(", "kit.gear(", "kit.flowDots(", "kit.cutaway(", "kit.glowMat("]) {
+      assert.ok(mb.includes(name), `mandor-bangunan must show ${name}`);
     }
     const cp = fs.readFileSync(path.join(ROOT, "ops/accounts/cerpenek.md"), "utf8");
     for (const name of ["poseFigure(", "kit.cloud(", "kit.prop(", "kit.ripple("]) {
@@ -243,7 +247,7 @@ const snippetBlocks = (text: string): string[] =>
 describe("brief TypeScript snippets are copy-paste safe", () => {
   test("no choreography snippet declares an unused local (root tsconfig sets noUnusedLocals)", () => {
     const NEW_HELPERS = /\b(beat|pulse|between|stepIndex|flowPhase|focusOffset|poseFigure)\b/;
-    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/ai-labs.md", "ops/accounts/upwayyy.md"]) {
+    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/ai-labs.md", "ops/accounts/upwayyy.md", "ops/accounts/mandor-bangunan.md"]) {
       const text = fs.readFileSync(path.join(ROOT, p), "utf8");
       for (const block of snippetBlocks(text).filter((b) => NEW_HELPERS.test(b))) {
         const declared = [...block.matchAll(/^\s*const (\w+)\s*=/gm)].map((m) => m[1]);
@@ -262,7 +266,7 @@ describe("brief TypeScript snippets are copy-paste safe", () => {
       for (const m of src.matchAll(/export (?:const|function|type|class) (\w+)/g)) engineExports.add(m[1]);
     }
     const ALLOWED = new Set(["t", "ctx", "L", "Kit", "kit", "poseFigure", "beat", "pulse", "between", "stepIndex", "flowPhase", "focusOffset", "keyframes", "Vec3", "CamPose", "BentoItem", "BeatCallout", "BentoGrid", "TerminalCard", "MetricPanel", "NodeFlow", "PromptCard", "ComparisonSplit", "IllustrationStage", "anak", "cards", "base", "pose", "mode", "on", "hi", "openU", "step", "box", "mat", "root", "shot", "import", "from"]);
-    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/ai-labs.md", "ops/accounts/upwayyy.md"]) {
+    for (const p of ["docs/AUTOPILOT.md", "ops/accounts/sastra-mesin.md", "ops/accounts/cerpenek.md", "ops/accounts/ai-labs.md", "ops/accounts/upwayyy.md", "ops/accounts/mandor-bangunan.md"]) {
       const text = fs.readFileSync(path.join(ROOT, p), "utf8");
       for (const block of snippetBlocks(text)) {
         for (const m of block.matchAll(/\b(base|shot)\(/g)) {
@@ -327,5 +331,53 @@ describe("Upwayyy topic backlog", () => {
   test("slugs are unique", () => {
     const slugs = fs.readFileSync(uwTopics, "utf8").split(/\r?\n/).filter((l) => UW_ENTRY.test(l)).map((l) => l.slice(2).split(":")[0]);
     assert.equal(new Set(slugs).size, slugs.length, "duplicate slugs in backlog");
+  });
+});
+
+// ---------- Mandor Bangunan
+const mbBrief = path.join(ROOT, "ops", "accounts", "mandor-bangunan.md");
+const mbTopics = path.join(ROOT, "ops", "topics", "mandor-bangunan.md");
+const MB_CATEGORIES = ["Gedung", "Jembatan", "Infrastruktur", "Pondasi", "Terowongan & Bendungan"] as const;
+const MB_ENTRY = /^- [a-z0-9]+(?:-[a-z0-9]+)*: .+ — https:\/\/\S+ \((Gedung|Jembatan|Infrastruktur|Pondasi|Terowongan & Bendungan)\)$/;
+
+describe("Mandor Bangunan brief", () => {
+  test("exists", () => assert.ok(fs.existsSync(mbBrief), `missing ${mbBrief}`));
+
+  test("has every required section", () => {
+    const text = fs.readFileSync(mbBrief, "utf8");
+    for (const heading of ["## Brand", "## Suara", "## Format", "## Topik", "## Riset", "## Naskah", "## Scene 3D", "## Batas isi", "## Musik latar", "## publish.json", "## Refill backlog"]) {
+      assert.ok(text.includes(heading), `brief missing section ${heading}`);
+    }
+  });
+
+  test("pins brand, account id, tts command, format command, loop rule, and music moods", () => {
+    const text = fs.readFileSync(mbBrief, "utf8");
+    assert.ok(text.includes('brand: { prefix: "Mandor ", accent: "Bangunan" },'));
+    assert.ok(text.includes('"account": "mandor-bangunan"'));
+    assert.ok(text.includes("npm run tts -- <slug> --account mandor-bangunan"));
+    assert.ok(text.includes("pick-format.mts --account mandor-bangunan"));
+    assert.match(text, /ending loop/i);
+    assert.match(text, /tail.*0,3/i);
+    for (const mood of ["teknik", "misteri", "fenomena"]) assert.ok(text.includes(`"${mood}"`), `missing mood ${mood}`);
+  });
+});
+
+describe("Mandor Bangunan topic backlog", () => {
+  test("exists", () => assert.ok(fs.existsSync(mbTopics), `missing ${mbTopics}`));
+
+  test("has at least 30 well-formed entries covering all five categories, with unique slugs and unique URLs", () => {
+    const text = fs.readFileSync(mbTopics, "utf8");
+    const lines = text.split(/\r?\n/);
+    const entries = lines.filter((l) => l.startsWith("- "));
+    assert.ok(entries.length >= 30, `backlog has ${entries.length} entries, need >= 30`);
+    const bad = entries.filter((l) => !MB_ENTRY.test(l));
+    assert.deepEqual(bad, [], `malformed entries: ${bad.join(" | ")}`);
+    const slugs = entries.map((l) => l.slice(2).split(":")[0]);
+    assert.equal(new Set(slugs).size, slugs.length, "duplicate slugs");
+    const urls = entries.map((l) => l.match(/https:\/\/\S+/)![0]);
+    assert.equal(new Set(urls).size, urls.length, "duplicate source urls in backlog");
+    for (const cat of MB_CATEGORIES) {
+      assert.ok(entries.some((l) => l.endsWith(`(${cat})`)), `missing category ${cat}`);
+    }
   });
 });

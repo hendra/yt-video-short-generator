@@ -10,6 +10,7 @@ import {
   envLines,
   instagramCaptionProblems,
   loopTailProblem,
+  mandorBangunanVideoProblems,
   resolveAccountArg,
   sastraMesinVideoProblems,
   scriptWordProblem,
@@ -305,6 +306,10 @@ describe("accountMusicProblems", () => {
     for (const music of ["rakit", "aliran", "rahasia"]) {
       assert.deepEqual(accountMusicProblems({ music }, "sastra-mesin"), []);
     }
+    for (const music of ["teknik", "misteri", "fenomena"]) {
+      assert.deepEqual(accountMusicProblems({ music }, "mandor-bangunan"), []);
+    }
+    assert.ok(accountMusicProblems({ music: "rakit" }, "mandor-bangunan").some((p) => p.includes("teknik, misteri, fenomena")));
     assert.ok(accountMusicProblems({ music: "ceria" }, "ai-labs").some((p) => p.includes("build, debug, showcase")));
     assert.ok(accountMusicProblems({ music: "" }, "kali-aja").some((p) => p.includes("teknik, misteri, fenomena")));
     assert.ok(accountMusicProblems({ music: 123 }, "cerpenek").some((p) => p.includes("ceria, hangat, petualang, nusantara, ajaib")));
@@ -326,8 +331,9 @@ describe("sastraMesinVideoProblems", () => {
 });
 
 describe("instagramCaptionProblems", () => {
-  test("skips accounts without Instagram (cerpenek)", () => {
+  test("skips accounts without Instagram (cerpenek, mandor-bangunan)", () => {
     assert.deepEqual(instagramCaptionProblems({}, ACCOUNTS.cerpenek), []);
+    assert.deepEqual(instagramCaptionProblems({}, ACCOUNTS["mandor-bangunan"]), []);
   });
 
   test("requires non-empty instagramCaption for IG-enabled accounts", () => {
@@ -441,5 +447,26 @@ describe("upwayyyVideoProblems", () => {
 describe("upwayyy music moods", () => {
   test("accepts a channel mood", () => {
     assert.deepEqual(accountMusicProblems({ music: "misteri" }, "upwayyy"), []);
+  });
+});
+
+describe("mandorBangunanVideoProblems", () => {
+  test("accepts a 3D video with omitted theme, explicit cream theme, or commented-out theme", () => {
+    assert.deepEqual(mandorBangunanVideoProblems({ indexSource: "export const video = { fov: 44 };", hasWorldFile: true }), []);
+    assert.deepEqual(mandorBangunanVideoProblems({ indexSource: 'export const video = { theme: "cream", fov: 44 };', hasWorldFile: true }), []);
+    assert.deepEqual(
+      mandorBangunanVideoProblems({ indexSource: '// theme: "blueprint"\nexport const video = { fov: 44 };', hasWorldFile: true }),
+      [],
+    );
+  });
+
+  test("rejects missing world.ts, motion mode, footage mode, and non-cream themes", () => {
+    assert.ok(mandorBangunanVideoProblems({ indexSource: "export const video = { fov: 44 };", hasWorldFile: false }).some((p) => p.includes("world.ts")));
+    assert.ok(mandorBangunanVideoProblems({ indexSource: 'export const video = { mode: "motion" };', hasWorldFile: true }).some((p) => /3D/.test(p)));
+    assert.ok(mandorBangunanVideoProblems({ indexSource: 'export const video = { mode: "footage" };', hasWorldFile: true }).some((p) => /3D/.test(p)));
+    for (const theme of ["blueprint", "dark-tech", "upwayyy"]) {
+      const problems = mandorBangunanVideoProblems({ indexSource: `export const video = { theme: "${theme}", fov: 44 };`, hasWorldFile: true });
+      assert.ok(problems.some((p) => p.includes("cream")), `expected rejection for theme ${theme}: ${problems.join("; ")}`);
+    }
   });
 });
