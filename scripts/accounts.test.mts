@@ -54,7 +54,7 @@ describe("account registry", () => {
 
   test("Cerpenek is fully configured with its own Buffer org and channels", () => {
     const a = ACCOUNTS.cerpenek;
-    assert.deepEqual(a.buffer, { orgId: "6af9a85ef0ed12641d69eab4", youtubeChannelId: "6af9a8caece6dfde5fd19e00", tiktokChannelId: "6af9a8e0ece6dfde5fd19e93" });
+    assert.deepEqual(a.buffer, { orgId: "6af9a85ef0ed12641d69eab4", youtubeChannelId: "6b027a7c8541f09ecb5eade1", tiktokChannelId: "6af9a8e0ece6dfde5fd19e93" });
     assert.deepEqual(missingConfigFields(a), []);
     const others = [ACCOUNTS["kali-aja"], ACCOUNTS["ai-labs"]].flatMap((o) => Object.values(o.buffer));
     for (const id of Object.values(a.buffer)) assert.equal(others.includes(id), false, `buffer id ${id} belongs to another account`);
