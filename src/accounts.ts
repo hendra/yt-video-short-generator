@@ -9,7 +9,7 @@
  * Kept free of node imports so it can be imported from scripts and from src alike.
  */
 
-export type AccountId = "kali-aja" | "ai-labs" | "cerpenek" | "sastra-mesin" | "upwayyy";
+export type AccountId = "kali-aja" | "ai-labs" | "cerpenek" | "sastra-mesin" | "upwayyy" | "mandor-bangunan";
 
 export type Account = {
   id: AccountId;
@@ -29,7 +29,7 @@ export type Account = {
   agent: { model: string; prompt: string; files: string[] };
 };
 
-export const ACCOUNT_IDS: readonly AccountId[] = ["kali-aja", "ai-labs", "cerpenek", "sastra-mesin", "upwayyy"];
+export const ACCOUNT_IDS: readonly AccountId[] = ["kali-aja", "ai-labs", "cerpenek", "sastra-mesin", "upwayyy", "mandor-bangunan"];
 
 export const DEFAULT_ACCOUNT: AccountId = "kali-aja";
 
@@ -135,6 +135,28 @@ export const ACCOUNTS: Record<AccountId, Account> = {
       prompt:
         "You are in CI. Follow AGENTS.md and ops/ci-prompt.md exactly. Follow ops/accounts/upwayyy.md (channel brief) and ops/topics/upwayyy.md (topic backlog) — they are part of your instructions, they override ops/ci-prompt.md where they differ, and docs/AUTOPILOT.md does NOT apply to this channel. Stop before any publish/upload/render step.",
       files: ["AGENTS.md", "ops/ci-prompt.md", "ops/accounts/upwayyy.md", "ops/topics/upwayyy.md"],
+    },
+  },
+  // Mandor Bangunan: construction, buildings, bridges, infrastructure & civil engineering explainers on Kali Aja's 3D cream look and voice.
+  // Buffer ids are placeholders until channels are connected; `--require-configured` keeps CI/cron blocked until then.
+  "mandor-bangunan": {
+    id: "mandor-bangunan",
+    label: "Mandor Bangunan",
+    brand: { prefix: "Mandor ", accent: "Bangunan" },
+    buffer: {
+      orgId: "TODO_MANDOR_ORG_ID",
+      youtubeChannelId: "TODO_MANDOR_YT_ID",
+      tiktokChannelId: "TODO_MANDOR_TT_ID",
+      instagramChannelId: "TODO_MANDOR_IG_ID",
+    },
+    youtubeCategoryId: "27",
+    madeForKids: false,
+    tts: { voice: "id-id-podcaster-1", style: "natural, warm, conversational" },
+    agent: {
+      model: "opencode/deepseek-v4.1-flash-free",
+      prompt:
+        "You are in CI. Follow AGENTS.md and ops/ci-prompt.md exactly. Follow ops/accounts/mandor-bangunan.md (channel brief) and ops/topics/mandor-bangunan.md (topic backlog) — they are part of your instructions, they override ops/ci-prompt.md where they differ, and docs/AUTOPILOT.md does NOT apply to this channel. Stop before any publish/upload/render step.",
+      files: ["AGENTS.md", "ops/ci-prompt.md", "ops/accounts/mandor-bangunan.md", "ops/topics/mandor-bangunan.md"],
     },
   },
 };

@@ -8,8 +8,8 @@ import { ACCOUNT_IDS, ACCOUNTS, DEFAULT_ACCOUNT, accountById, isAccountId, isCon
 const isPlaceholder = (v: string) => v.startsWith("TODO_");
 
 describe("account registry", () => {
-  test("holds exactly the five known accounts and defaults to Kali Aja", () => {
-    assert.deepEqual([...ACCOUNT_IDS], ["kali-aja", "ai-labs", "cerpenek", "sastra-mesin", "upwayyy"]);
+  test("holds exactly the six known accounts and defaults to Kali Aja", () => {
+    assert.deepEqual([...ACCOUNT_IDS], ["kali-aja", "ai-labs", "cerpenek", "sastra-mesin", "upwayyy", "mandor-bangunan"]);
     assert.equal(DEFAULT_ACCOUNT, "kali-aja");
   });
 
@@ -109,6 +109,28 @@ describe("account registry", () => {
       Object.values(o.buffer),
     );
     for (const id of Object.values(u.buffer)) assert.equal(others.includes(id), false, `buffer id ${id} belongs to another account`);
+  });
+
+  test("Mandor Bangunan has its own identity with placeholder Buffer ids", () => {
+    const m = ACCOUNTS["mandor-bangunan"];
+    assert.equal(m.label, "Mandor Bangunan");
+    assert.deepEqual(m.brand, { prefix: "Mandor ", accent: "Bangunan" });
+    assert.equal(m.youtubeCategoryId, "27");
+    assert.equal(m.madeForKids, false);
+    assert.deepEqual(m.tts, { voice: "id-id-podcaster-1", style: "natural, warm, conversational" });
+    assert.equal(m.agent.model, "opencode/deepseek-v4.1-flash-free");
+    assert.deepEqual(m.agent.files, ["AGENTS.md", "ops/ci-prompt.md", "ops/accounts/mandor-bangunan.md", "ops/topics/mandor-bangunan.md"]);
+    assert.match(m.agent.prompt, /ops\/accounts\/mandor-bangunan\.md/);
+    assert.match(m.agent.prompt, /ops\/topics\/mandor-bangunan\.md/);
+    assert.match(m.agent.prompt, /override ops\/ci-prompt\.md/);
+    assert.match(m.agent.prompt, /docs\/AUTOPILOT\.md does NOT apply/);
+    assert.equal(isConfigured(m), false);
+    assert.deepEqual(missingConfigFields(m), [
+      "buffer.orgId",
+      "buffer.youtubeChannelId",
+      "buffer.tiktokChannelId",
+      "buffer.instagramChannelId",
+    ]);
   });
 
   test("a placeholder instagramChannelId counts as unconfigured", () => {
