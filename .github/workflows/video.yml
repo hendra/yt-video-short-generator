@@ -110,7 +110,7 @@ jobs:
       - name: Dependencies
         run: npm ci
 
-      # Fix the publish slot (pagi/siang/malam + WIB date) at run start, so a slow run
+      # Fix the publish slot (siang/malam + WIB date) at run start, so a slow run
       # never drifts into the next slot's air times (YouTube is capped at 2/day by Buffer free).
       - name: Publish slot
         id: slot

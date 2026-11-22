@@ -3,7 +3,7 @@
  * shipped code instead of a re-implementation. No I/O, no env access.
  */
 import crypto from "node:crypto";
-import { ACCOUNT_IDS, isAccountId, type Account, type AccountId } from "../src/accounts.ts";
+import { ACCOUNT_IDS, isAccountId, type Account } from "../src/accounts.ts";
 import type { RecentPost } from "./duplicate-core.mts";
 
 /** Cloudinary signed-upload signature: sha1 of the alphabetically sorted "k=v&…" param string + <secret>. */
@@ -64,13 +64,12 @@ export const extractBufferError = (body: any): string => {
   return `${d.__typename ?? "unknown"}: ${d.message ?? JSON.stringify(d)}`;
 };
 
-// ---------- Daily slots: one video per slot, aired per platform at fixed WIB times (Buffer free caps YouTube at 2/day).
-export type Slot = "pagi" | "siang" | "malam";
+// ---------- Daily slots: two videos per day, aired across all platforms at 12:00 and 19:00 WIB.
+export type Slot = "siang" | "malam";
 export type Platform = "youtube" | "tiktok" | "instagram";
-export const SLOT_TIMES: Record<Slot, Partial<Record<Platform, string>>> = {
-  pagi: { tiktok: "07:00", instagram: "08:00" },
-  siang: { youtube: "12:00", tiktok: "13:00", instagram: "12:00" },
-  malam: { youtube: "19:00", tiktok: "19:00", instagram: "20:00" },
+export const SLOT_TIMES: Record<Slot, Record<Platform, string>> = {
+  siang: { youtube: "12:00", tiktok: "12:00", instagram: "12:00" },
+  malam: { youtube: "19:00", tiktok: "19:00", instagram: "19:00" },
 };
 const SLOTS = Object.keys(SLOT_TIMES) as Slot[];
 const WIB_MS = 7 * 3_600_000; // UTC+7, no DST
@@ -80,31 +79,17 @@ export const isSlot = (s: string): s is Slot => (SLOTS as string[]).includes(s);
 /** UTC ISO for a WIB "HH:MM" on WIB date YYYY-MM-DD. */
 const wibToIso = (date: string, hhmm: string): string => new Date(Date.parse(`${date}T${hhmm}:00Z`) - WIB_MS).toISOString();
 
-const airTimesFor = (slot: Slot, accountId?: AccountId): Partial<Record<Platform, string>> => {
-  const times = SLOT_TIMES[slot];
-  // Upwayyy TikTok posts on YouTube's schedule only (12:00 & 19:00 WIB; no pagi slot).
-  if (accountId === "upwayyy") {
-    return times.youtube ? { youtube: times.youtube, tiktok: times.youtube } : {};
-  }
-  return times;
-};
+/** ISO UTC air time for a platform in a slot. */
+export const dueAt = (slot: Slot, date: string, platform: Platform): string => wibToIso(date, SLOT_TIMES[slot][platform]);
 
-/** ISO UTC air time for a platform in a slot, or null when the slot skips that platform. */
-export const dueAt = (slot: Slot, date: string, platform: Platform, accountId?: AccountId): string | null => {
-  const t = airTimesFor(slot, accountId)[platform];
-  return t ? wibToIso(date, t) : null;
-};
-
-/** First slot whose earliest air time is still ahead of `now`; after the last one, next WIB day's first active slot. */
-export const slotFor = (now: Date, accountId?: AccountId): { slot: Slot; date: string } => {
+/** First slot whose earliest air time is still ahead of `now`; after the last one, next WIB day's first slot. */
+export const slotFor = (now: Date): { slot: Slot; date: string } => {
   const today = new Date(now.getTime() + WIB_MS).toISOString().slice(0, 10);
-  const active = SLOTS.filter((s) => Object.keys(airTimesFor(s, accountId)).length > 0);
-  for (const slot of active) {
-    const earliest = Object.values(airTimesFor(slot, accountId)).sort()[0]!;
+  for (const slot of SLOTS) {
+    const earliest = Object.values(SLOT_TIMES[slot]).sort()[0]!;
     if (Date.parse(wibToIso(today, earliest)) > now.getTime()) return { slot, date: today };
   }
-  const firstSlot = active[0] ?? "pagi";
-  return { slot: firstSlot, date: new Date(Date.parse(`${today}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10) };
+  return { slot: SLOTS[0], date: new Date(Date.parse(`${today}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10) };
 };
 
 /** Slot for a publish run: --slot/--date as a pair (fixed at run start by CI), else the slot for `now`. Returns an error string when invalid. */
@@ -112,9 +97,8 @@ export const resolveSlot = (
   slot: string | undefined,
   date: string | undefined,
   now: Date,
-  accountId?: AccountId,
 ): { slot: Slot; date: string } | string => {
-  if (slot === undefined && date === undefined) return slotFor(now, accountId);
+  if (slot === undefined && date === undefined) return slotFor(now);
   if (slot === undefined || date === undefined) return "--slot and --date must be given together";
   if (!isSlot(slot)) return `--slot "${slot}" tidak dikenal (valid: ${SLOTS.join(", ")})`;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) return `--date "${date}" bukan YYYY-MM-DD`;

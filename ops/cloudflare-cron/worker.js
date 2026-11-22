@@ -1,6 +1,6 @@
 /**
  * Cron weker untuk pipeline video (semua akun di ACCOUNTS).
- * Setiap 22:30, 03:30, 10:30 UTC (= 05:30, 10:30, 17:30 WIB — slot pagi/siang/malam; jam tayang per platform
+ * Setiap 02:00, 09:00 UTC (= 09:00, 16:00 WIB — 3 jam sebelum tayang, slot siang/malam; jam tayang semua platform 12:00 & 19:00 WIB
  * dijadwalkan di Buffer oleh scripts/publish.mts, lihat SLOT_TIMES di scripts/publish-lib.mts)
  * memicu `repository_dispatch` di repo GitHub **sekali per akun** — workflow video.yml tahu akun mana
  * yang harus dijalankan dari `client_payload.account`.
@@ -15,8 +15,6 @@
  */
 
 const DEFAULT_ACCOUNTS = "kali-aja";
-// Accounts whose TikTok airs on YouTube's 2x/day schedule (no pagi 05:30 WIB run).
-const NO_MORNING_ACCOUNTS = new Set(["upwayyy"]);
 
 /** Dispatch one account; returns null on success, or a failure record. */
 async function dispatchOne(account, env) {
@@ -40,11 +38,10 @@ async function dispatchOne(account, env) {
 
 export default {
   async scheduled(event, env, ctx) {
-    const isMorningTick = new Date(event.scheduledTime || Date.now()).getUTCHours() === 22;
     const accounts = (env.ACCOUNTS || DEFAULT_ACCOUNTS)
       .split(",")
       .map((s) => s.trim())
-      .filter((a) => Boolean(a) && !(isMorningTick && NO_MORNING_ACCOUNTS.has(a)));
+      .filter(Boolean);
     const results = await Promise.allSettled(accounts.map((account) => dispatchOne(account, env)));
     const failures = [];
     for (const [i, result] of results.entries()) {

@@ -164,27 +164,20 @@ describe("sanitizeInstagramCaption and instagramCaptionFor", () => {
 
 describe("slot scheduling", () => {
   test("slotFor picks the slot by WIB time, including the cron runs", () => {
-    assert.deepEqual(slotFor(new Date("2026-11-20T22:30:00Z")), { slot: "pagi", date: "2026-11-21" }); // 05:30 WIB
-    assert.deepEqual(slotFor(new Date("2026-11-21T03:30:00Z")), { slot: "siang", date: "2026-11-21" }); // 10:30
-    assert.deepEqual(slotFor(new Date("2026-11-21T10:30:00Z")), { slot: "malam", date: "2026-11-21" }); // 17:30
+    assert.deepEqual(slotFor(new Date("2026-11-20T22:30:00Z")), { slot: "siang", date: "2026-11-21" }); // 05:30 WIB -> siang
+    assert.deepEqual(slotFor(new Date("2026-11-21T02:00:00Z")), { slot: "siang", date: "2026-11-21" }); // 09:00 WIB (3h before 12:00)
+    assert.deepEqual(slotFor(new Date("2026-11-21T09:00:00Z")), { slot: "malam", date: "2026-11-21" }); // 16:00 WIB (3h before 19:00)
   });
-  test("slotFor after the last slot rolls to next WIB day's pagi", () => {
-    assert.deepEqual(slotFor(new Date("2026-11-21T12:30:00Z")), { slot: "pagi", date: "2026-11-22" }); // 19:30
+  test("slotFor after the last slot rolls to next WIB day's siang", () => {
+    assert.deepEqual(slotFor(new Date("2026-11-21T12:30:00Z")), { slot: "siang", date: "2026-11-22" }); // 19:30 WIB
   });
-  test("dueAt converts WIB air times to UTC; pagi has no YouTube", () => {
-    assert.equal(dueAt("pagi", "2026-11-21", "tiktok"), "2026-11-21T00:00:00.000Z");
-    assert.equal(dueAt("pagi", "2026-11-21", "youtube"), null);
-    assert.equal(dueAt("malam", "2026-11-21", "instagram"), "2026-11-21T13:00:00.000Z");
+  test("dueAt converts WIB air times to UTC (12:00 and 19:00 WIB for all platforms)", () => {
     assert.equal(dueAt("siang", "2026-11-21", "youtube"), "2026-11-21T05:00:00.000Z");
-  });
-  test("upwayyy TikTok follows YouTube schedule (12:00 and 19:00 WIB only; no pagi)", () => {
-    assert.equal(dueAt("pagi", "2026-11-21", "tiktok", "upwayyy"), null);
-    assert.equal(dueAt("siang", "2026-11-21", "tiktok", "upwayyy"), "2026-11-21T05:00:00.000Z");
-    assert.equal(dueAt("malam", "2026-11-21", "tiktok", "upwayyy"), "2026-11-21T12:00:00.000Z");
-    assert.equal(dueAt("siang", "2026-11-21", "tiktok", "kali-aja"), "2026-11-21T06:00:00.000Z");
-    // 05:30 WIB and 19:30 WIB skip pagi and pick siang for upwayyy
-    assert.deepEqual(slotFor(new Date("2026-11-20T22:30:00Z"), "upwayyy"), { slot: "siang", date: "2026-11-21" });
-    assert.deepEqual(slotFor(new Date("2026-11-21T12:30:00Z"), "upwayyy"), { slot: "siang", date: "2026-11-22" });
+    assert.equal(dueAt("siang", "2026-11-21", "tiktok"), "2026-11-21T05:00:00.000Z");
+    assert.equal(dueAt("siang", "2026-11-21", "instagram"), "2026-11-21T05:00:00.000Z");
+    assert.equal(dueAt("malam", "2026-11-21", "youtube"), "2026-11-21T12:00:00.000Z");
+    assert.equal(dueAt("malam", "2026-11-21", "tiktok"), "2026-11-21T12:00:00.000Z");
+    assert.equal(dueAt("malam", "2026-11-21", "instagram"), "2026-11-21T12:00:00.000Z");
   });
   test("postTiming falls back to shareNow once the air time passed", () => {
     assert.deepEqual(postTiming("2026-11-21T00:00:00.000Z", new Date("2026-11-21T00:30:00Z")), { mode: "shareNow" });
@@ -192,6 +185,8 @@ describe("slot scheduling", () => {
   });
   test("isSlot", () => {
     assert.equal(isSlot("siang"), true);
+    assert.equal(isSlot("malam"), true);
+    assert.equal(isSlot("pagi"), false);
     assert.equal(isSlot("sore"), false);
   });
 });
@@ -230,11 +225,12 @@ describe("duplicate lookup sees queued posts", () => {
 describe("resolveSlot (publish --slot/--date)", () => {
   const now = new Date("2026-11-21T03:30:00Z");
   test("no args uses the slot for now", () => assert.deepEqual(resolveSlot(undefined, undefined, now), { slot: "siang", date: "2026-11-21" }));
-  test("explicit slot and date are kept", () => assert.deepEqual(resolveSlot("pagi", "2026-11-21", now), { slot: "pagi", date: "2026-11-21" }));
+  test("explicit slot and date are kept", () => assert.deepEqual(resolveSlot("malam", "2026-11-21", now), { slot: "malam", date: "2026-11-21" }));
   test("rejects unknown slot, bad date, or only one of the pair", () => {
+    assert.equal(typeof resolveSlot("pagi", "2026-11-21", now), "string");
     assert.equal(typeof resolveSlot("sore", "2026-11-21", now), "string");
-    assert.equal(typeof resolveSlot("pagi", "21-11-2026", now), "string");
-    assert.equal(typeof resolveSlot("pagi", undefined, now), "string");
+    assert.equal(typeof resolveSlot("siang", "21-11-2026", now), "string");
+    assert.equal(typeof resolveSlot("siang", undefined, now), "string");
     assert.equal(typeof resolveSlot(undefined, "2026-11-21", now), "string");
   });
 });

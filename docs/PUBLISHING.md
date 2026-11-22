@@ -42,18 +42,16 @@ Kedua akun sudah **aktif dan tayang**: AI Labs tayang perdana pada **2026-11-15*
 
 Publikasi tetap per akun: `npm run publish -- <slug>` membaca `account` dari `src/videos/<slug>/publish.json`; `--account <id>` (opsional) hanyalah cross-check dan menolak kalau tidak cocok. Hal yang sama berlaku untuk `scripts/fetch-published-videos.mts --account` dan `scripts/check-duplicates.mts --db`.
 
-## Jadwal tayang (sejak 2026-11-21)
+## Jadwal tayang
 
-Buffer free menolak post YouTube ke-3 per hari per channel (`LimitReachedError: … maximum number of posts YouTube allows in a day (2)`). Karena itu: 3 run/hari per akun, satu video per slot, ditayangkan per platform di jam tetap (WIB). Sumber kebenaran: `SLOT_TIMES` di `scripts/publish-lib.mts`.
+Buffer free membatasi post YouTube maksimal 2×/hari per channel (`LimitReachedError: … maximum number of posts YouTube allows in a day (2)`). Karena itu: 2 run/hari per akun, satu video per slot, ditayangkan serentak di semua platform (YouTube, TikTok, Instagram\*) pada jam tetap (WIB). Sumber kebenaran: `SLOT_TIMES` di `scripts/publish-lib.mts`.
 
 | Slot (run mulai) | YouTube | TikTok | Instagram* |
 |---|---|---|---|
-| pagi (05:30) | — | 07:00 | 08:00 |
-| siang (10:30) | 12:00 | 13:00 | 12:00 |
-| malam (17:30) | 19:00 | 19:00 | 20:00 |
+| siang (09:00) | 12:00 | 12:00 | 12:00 |
+| malam (16:00) | 19:00 | 19:00 | 19:00 |
 
 \* hanya akun dengan `instagramChannelId`.
-- Khusus `upwayyy`: TikTok mengikuti jadwal YouTube (12:00 & 19:00 WIB, 2×/hari; tidak tayang dan tidak di-dispatch cron pada slot pagi 05:30).
 
 - Slot ditetapkan di awal run (`scripts/slot.mts`, job `build`) dan diteruskan ke `npm run publish -- <slug> --slot <s> --date <YYYY-MM-DD>`; tanpa flag, publish memakai slot berikutnya dari jam sekarang.
 - Jam tayang yang sudah lewat saat publish → platform itu `shareNow` (tidak gagal).

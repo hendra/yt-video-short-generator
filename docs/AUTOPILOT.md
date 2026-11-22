@@ -2,7 +2,7 @@
 
 (Ada juga varian otomatis penuh via GitHub Actions — 6×/hari — lihat `ops/README.md`. Runbook ini berlaku untuk keduanya.)
 
-Dibaca oleh scheduled task (Sen/Rab/Jum) dan oleh CI `video-run` (cron harian ×3: 05:30/10:30/17:30 WIB, tayang terjadwal per platform — lihat `docs/PUBLISHING.md` § Jadwal tayang). Ikuti persis. Bahasa konten: Indonesia santai-profesional. Zona waktu WIB.
+Dibaca oleh scheduled task (Sen/Rab/Jum) dan oleh CI `video-run` (cron harian ×2: 09:00/16:00 WIB, tayang terjadwal jam 12:00 & 19:00 WIB untuk semua platform — lihat `docs/PUBLISHING.md` § Jadwal tayang). Ikuti persis. Bahasa konten: Indonesia santai-profesional. Zona waktu WIB.
 
 > **Multi-akun:** dokumen ini adalah runbook khusus channel **Kali Aja Tau** (ID channel, brand, niche sains). Channel kedua **AI Labs** punya brief sendiri di `ops/accounts/ai-labs.md` + backlog topik di `ops/topics/ai-labs.md`; konfigurasi kedua channel ada di `src/accounts.ts`. CI menjalankan keduanya di slot yang sama, sekali per akun — AI Labs hanya lewat CI (bukan scheduled task lokal).
 
