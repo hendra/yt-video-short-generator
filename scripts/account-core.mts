@@ -100,12 +100,30 @@ export const resolveAccountArg = (flag: string | undefined, envValue: string | u
 export const voiceProblem = (account: Account): string | null =>
   account.tts.voice.startsWith("TODO_") ? `suara akun ${account.id} belum dipilih (tts.voice di src/accounts.ts)` : null;
 
+/** Problems with instagramCaption in publish.json for accounts that publish to Instagram Reels. */
+export const instagramCaptionProblems = (publishJson: { instagramCaption?: unknown } | null, account: Account): string[] => {
+  if (!account.buffer.instagramChannelId) return [];
+  const problems: string[] = [];
+  const ig = publishJson?.instagramCaption;
+  if (typeof ig !== "string" || ig.trim() === "") {
+    problems.push('publish.json: field "instagramCaption" wajib diisi untuk akun dengan Instagram');
+    return problems;
+  }
+  if (ig.length > 2200) {
+    problems.push(`publish.json: instagramCaption ${ig.length} karakter, maksimal 2200`);
+  }
+  if (/(?:^|[^\w])#(?:shorts|short|fyp)(?![\w-])/i.test(ig)) {
+    problems.push("publish.json: instagramCaption dilarang memakai #shorts, #short, atau #fyp");
+  }
+  return problems;
+};
+
 /** Rules specific to ai-labs videos: motion graphics only, captions disabled, no world.ts, and PromptCard needs the prompt in the description. */
 export const aiLabsVideoProblems = (opts: {
   indexSource: string;
   shotsSource: string | null;
   hasWorldFile: boolean;
-  publishJson: { description?: unknown } | null;
+  publishJson: { description?: unknown; instagramCaption?: unknown } | null;
 }): string[] => {
   const problems: string[] = [];
   const indexCode = opts.indexSource.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
@@ -122,6 +140,10 @@ export const aiLabsVideoProblems = (opts: {
     const desc = opts.publishJson?.description;
     if (typeof desc !== "string" || !/Prompt siap copy:/i.test(desc)) {
       problems.push('shots pakai PromptCard — publish.json description wajib berisi "Prompt siap copy:"');
+    }
+    const ig = opts.publishJson?.instagramCaption;
+    if (typeof ig === "string" && !/Prompt siap copy:/i.test(ig)) {
+      problems.push('shots pakai PromptCard — publish.json instagramCaption wajib berisi "Prompt siap copy:"');
     }
   }
   return problems;

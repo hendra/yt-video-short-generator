@@ -65,6 +65,10 @@ for (const field of ["title", "tiktokTitle", "description", "tiktokCaption"] as 
     process.exit(1);
   }
 }
+if (publish.instagramCaption !== undefined && (typeof publish.instagramCaption !== "string" || !publish.instagramCaption.trim())) {
+  console.error("publish.json: invalid instagramCaption");
+  process.exit(1);
+}
 // Keep naskah in scope for validation, but duplicates are judged on the publish copy — naskah is full text and would over-match.
 if (readScript(slug).length === 0) {
   console.error(`missing or empty ${path.join(videoDir(slug), "naskah.txt")}`);
