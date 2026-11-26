@@ -175,20 +175,14 @@ jobs:
           fi
           exit 0
 
-      # Slug candidates = folders under src/videos created since the marker.
-      # Fail on ZERO or MULTIPLE candidates; validate the slug charset so it can
-      # be safely interpolated downstream.
+      # Slug = the folder created since the marker that registry.ts registers (the agent may
+      # abandon a topic mid-run and leave its folder behind). Fails on ZERO or MULTIPLE matches.
       - name: Discover slug
         id: slug
         if: github.event.inputs.slug == ''
         run: |
           set -e
-          CANDIDATES="$(find src/videos -mindepth 1 -maxdepth 1 -type d -newer "$RUNNER_TEMP/.ci-start" -printf '%f\n')"
-          N="$(printf '%s\n' "$CANDIDATES" | grep -c . || true)"
-          if [ "$N" -eq 0 ]; then echo "agent produced no new video folder"; exit 1; fi
-          if [ "$N" -gt 1 ]; then echo "ambiguous slug (multiple new folders):"; echo "$CANDIDATES"; exit 1; fi
-          SLUG="$CANDIDATES"
-          [[ "$SLUG" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "slug fails charset check: $SLUG"; exit 1; }
+          SLUG="$(npx tsx scripts/discover-slug.mts "$RUNNER_TEMP/.ci-start")"
           echo "SLUG=$SLUG" >> "$GITHUB_ENV"
           echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
 
